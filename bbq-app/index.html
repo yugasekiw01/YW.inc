@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 BBQ買い出しリスト</title>
+    <meta property="og:title" content="🔥 BBQ買い出しリスト">
+    <meta property="og:description" content="BBQの買い出しをみんなで管理しよう！">
+    <meta property="og:type" content="website">
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'M PLUS Rounded 1c', -apple-system, sans-serif;
+            background: #FFF5E6;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* ---- ヘッダー ---- */
+        header {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF9F43 50%, #FFDD59 100%);
+            color: white;
+            padding: 28px 16px 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        header p {
+            font-size: 0.88rem;
+            opacity: 0.9;
+            margin-top: 6px;
+            position: relative;
+        }
+
+        /* ---- 追加フォーム ---- */
+        .add-form {
+            background: white;
+            margin: -14px 14px 0;
+            padding: 18px;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(255,107,107,0.15);
+            position: relative;
+            z-index: 1;
+        }
+        .form-row { display: flex; gap: 8px; }
+        input, select {
+            border: 2px solid #FFE0CC;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #FFFAF7;
+            width: 100%;
+        }
+        input:focus, select:focus {
+            border-color: #FF6B6B;
+            box-shadow: 0 0 0 3px rgba(255,107,107,0.15);
+            background: white;
+        }
+        .input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        #item-name     { flex: 1; }
+        #item-category { width: 100%; margin-bottom: 10px; }
+        .add-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 14px rgba(255,107,107,0.4);
+            letter-spacing: 0.05em;
+        }
+        .add-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,107,0.5); }
+        .add-btn:active { transform: scale(0.97); }
+        .add-btn:disabled { background: linear-gradient(135deg, #FFB3B3, #FFCC99); box-shadow: none; cursor: default; }
+
+        /* ---- 統計 ---- */
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin: 14px 14px 0;
+        }
+        .stat {
+            flex: 1;
+            text-align: center;
+            padding: 14px 8px;
+            border-radius: 16px;
+            font-weight: 800;
+        }
+        .stat:nth-child(1) { background: #FFE8E8; }
+        .stat:nth-child(2) { background: #E8F8E8; }
+        .stat:nth-child(3) { background: #E8EEFF; }
+        .stat-num   { font-size: 1.8rem; }
+        .stat:nth-child(1) .stat-num { color: #FF6B6B; }
+        .stat:nth-child(2) .stat-num { color: #4CAF50; }
+        .stat:nth-child(3) .stat-num { color: #5C7CFA; }
+        .stat-label { font-size: 0.7rem; color: #999; margin-top: 2px; font-weight: 700; }
+
+        /* ---- 参加者 ---- */
+        .participants-wrap {
+            margin: 10px 14px 0;
+            background: white;
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .participants-header {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #AAA;
+            margin-bottom: 10px;
+        }
+        .participants-header span {
+            color: #FF9F43;
+        }
+        .participant-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .participant-tag {
+            background: #FFF5E6;
+            border: 2px solid #FFE0CC;
+            color: #FF9F43;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+        .participant-tag.me {
+            background: #FF9F43;
+            border-color: #FF9F43;
+            color: white;
+        }
+        .no-participants {
+            font-size: 0.82rem;
+            color: #CCC;
+            font-weight: 700;
+        }
+
+        /* ---- プログレスバー ---- */
+        .progress-wrap {
+            margin: 10px 14px 0;
+            background: white;
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #AAA;
+            margin-bottom: 8px;
+        }
+        .progress-label span:last-child { color: #FF9F43; }
+        .progress-bar {
+            height: 10px;
+            background: #FFF0E0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B6B, #FF9F43, #FFDD59);
+            border-radius: 10px;
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ---- カテゴリ別リスト ---- */
+        .category-section { margin: 14px 14px 0; }
+        .category-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #888;
+            margin-bottom: 8px;
+            padding-left: 4px;
+            letter-spacing: 0.06em;
+        }
+
+        /* ---- アイテムカード ---- */
+        .item {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid transparent;
+            transition: opacity 0.3s, transform 0.15s;
+        }
+        .item:active { transform: scale(0.99); }
+
+        /* カテゴリ別の左ボーダー色 */
+        .item[data-cat="肉"]       { border-left-color: #FF6B6B; }
+        .item[data-cat="野菜・果物"] { border-left-color: #51CF66; }
+        .item[data-cat="飲み物"]    { border-left-color: #339AF0; }
+        .item[data-cat="炭水化物"]  { border-left-color: #FCC419; }
+        .item[data-cat="調味料・その他"] { border-left-color: #CC5DE8; }
+
+        .item.checked { opacity: 0.4; }
+        .item.checked .item-name { text-decoration: line-through; }
+
+        .item-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #FF6B6B;
+            flex-shrink: 0;
+        }
+        .item-name {
+            flex: 1;
+            font-size: 1rem;
+            font-weight: 700;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .delete-btn {
+            background: #FFF0F0;
+            border: none;
+            color: #FFAAAA;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: color 0.18s, background 0.18s;
+            flex-shrink: 0;
+            font-weight: 800;
+        }
+        .delete-btn:hover { color: #FF4444; background: #FFE0E0; }
+
+        /* ---- 挙手ボタン ---- */
+        .vote-btn {
+            background: #FFF5E6;
+            border: 2px solid #FFE0CC;
+            color: #FF9F43;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-family: inherit;
+            transition: all 0.18s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .vote-btn:hover  { background: #FFE8CC; border-color: #FF9F43; }
+        .vote-btn.voted  { background: #FF9F43; border-color: #FF9F43; color: white; }
+
+        /* ---- 挙手者リスト ---- */
+        .item-info { flex: 1; min-width: 0; }
+        .voters {
+            font-size: 0.75rem;
+            color: #FF9F43;
+            font-weight: 700;
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ---- 名前入力モーダル ---- */
+        .name-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .name-modal.hidden { display: none; }
+        .name-modal-box {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .name-modal-box .icon { font-size: 3rem; margin-bottom: 12px; }
+        .name-modal-box h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+        .name-modal-box p  { font-size: 0.85rem; color: #999; margin-bottom: 18px; }
+        .name-input {
+            border: 2px solid #FFE0CC;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+            margin-bottom: 12px;
+            text-align: center;
+            font-weight: 700;
+        }
+        .name-input:focus { border-color: #FF6B6B; }
+        .name-submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 1rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* ---- 空状態 ---- */
+        .empty-state {
+            text-align: center;
+            padding: 56px 20px;
+            color: #CCC;
+        }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 14px; }
+        .empty-state p { font-size: 1rem; font-weight: 700; }
+
+        /* ---- タブ ---- */
+        .tabs {
+            display: flex;
+            background: white;
+            margin: 0 14px;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 4px 14px rgba(255,107,107,0.12);
+            overflow: hidden;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 13px 8px;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #CCC;
+            cursor: pointer;
+            transition: color 0.2s, border-bottom 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-btn.active { color: #FF6B6B; border-bottom-color: #FF6B6B; }
+        .tab-panel.hidden { display: none; }
+
+        /* ---- 割り勘 ---- */
+        .warikan-wrap {
+            margin: 14px 14px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .warikan-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .warikan-label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #AAA;
+            margin-bottom: 12px;
+        }
+        .amount-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .amount-row input {
+            flex: 1;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-align: right;
+            border: 2px solid #FFE0CC;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-family: inherit;
+            outline: none;
+            background: #FFFAF7;
+        }
+        .amount-row input:focus { border-color: #FF6B6B; background: white; }
+        .amount-row .yen { font-size: 1.2rem; font-weight: 800; color: #AAA; }
+        .spinner-row {
+            display: flex;
+            align-items: center;
+            border: 2px solid #FFE0CC;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .spin-btn {
+            background: #FFF5E6;
+            border: none;
+            padding: 12px 22px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #FF9F43;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s;
+        }
+        .spin-btn:hover  { background: #FFE8CC; }
+        .spin-btn:active { background: #FF9F43; color: white; }
+        .spin-count {
+            flex: 1;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #333;
+        }
+        .warikan-result {
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            border-radius: 20px;
+            padding: 28px 20px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(255,107,107,0.3);
+        }
+        .warikan-result .result-label {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 8px;
+        }
+        .warikan-result .result-num {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1;
+        }
+        .warikan-result .result-yen {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: rgba(255,255,255,0.85);
+            margin-left: 4px;
+        }
+
+        /* ---- 読み込み中 ---- */
+        .loading {
+            text-align: center;
+            padding: 56px;
+            color: #FF9F43;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* ---- 接続ステータス ---- */
+        .conn-status {
+            position: fixed;
+            bottom: 20px;
+            right: 16px;
+            border-radius: 20px;
+            padding: 7px 16px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+            font-family: inherit;
+        }
+        .conn-status.online  { background: #51CF66; color: white; }
+        .conn-status.offline { background: #FF6B6B; color: white; }
+
+        /* ---- エラーバナー ---- */
+        .error-banner {
+            background: #FFF9E6;
+            border-left: 4px solid #FCC419;
+            margin: 10px 14px 0;
+            padding: 12px 14px;
+            border-radius: 0 12px 12px 0;
+            font-size: 0.85rem;
+            color: #7B5800;
+            font-weight: 700;
+            display: none;
+        }
+        .error-banner.visible { display: block; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🔥 BBQ 買い出しリスト</h1>
+</header>
+
+<div class="tabs">
+    <button class="tab-btn active" id="tab-btn-list" onclick="switchTab('list')">🛒 買い出しリスト</button>
+    <button class="tab-btn" id="tab-btn-warikan" onclick="switchTab('warikan')">💰 割り勘</button>
+</div>
+
+<div id="tab-list" class="tab-panel">
+
+<div class="add-form">
+    <div class="input-row">
+        <input type="text" id="item-name" placeholder="品目を入力（例: 牛カルビ）" autocomplete="off" />
+    </div>
+    <select id="item-category">
+        <option value="肉">🥩 肉</option>
+        <option value="野菜・果物">🥦 野菜・果物</option>
+        <option value="飲み物">🍺 飲み物</option>
+        <option value="炭水化物">🍞 炭水化物</option>
+        <option value="調味料・その他">🧂 調味料・その他</option>
+    </select>
+    <button class="add-btn" id="add-btn">＋ リストに追加！</button>
+</div>
+
+<div class="stats">
+    <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">合計</div></div>
+    <div class="stat"><div class="stat-num" id="stat-done">0</div><div class="stat-label">購入済み</div></div>
+    <div class="stat"><div class="stat-num" id="stat-remaining">0</div><div class="stat-label">残り</div></div>
+</div>
+
+<div class="participants-wrap">
+    <div class="participants-header">👥 参加者 <span id="participant-count">0</span>人</div>
+    <div class="participant-tags" id="participant-tags">
+        <span class="no-participants">まだ誰もいません</span>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-label">
+        <span>進捗</span>
+        <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+</div>
+
+<div id="items-container">
+    <div class="loading">読み込み中…🔥</div>
+</div>
+
+</div><!-- /tab-list -->
+
+<div id="tab-warikan" class="tab-panel hidden">
+    <div class="warikan-wrap">
+        <div class="warikan-card">
+            <div class="warikan-label">💴 合計金額</div>
+            <div class="amount-row">
+                <input type="number" id="total-amount" placeholder="0" min="0" inputmode="numeric">
+                <span class="yen">円</span>
+            </div>
+        </div>
+        <div class="warikan-card">
+            <div class="warikan-label">👥 割り勘人数</div>
+            <div class="spinner-row">
+                <button class="spin-btn" id="people-minus">－</button>
+                <div class="spin-count" id="people-count">1</div>
+                <button class="spin-btn" id="people-plus">＋</button>
+            </div>
+        </div>
+        <div class="warikan-result">
+            <div class="result-label">1人あたり</div>
+            <div><span class="result-num" id="per-person">0</span><span class="result-yen">円</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- 名前入力モーダル -->
+<div class="name-modal hidden" id="name-modal">
+    <div class="name-modal-box">
+        <div class="icon">👤</div>
+        <h2>あなたの名前は？</h2>
+        <p>✋ボタンで欲しいものに挙手できます</p>
+        <input type="text" class="name-input" id="name-input" placeholder="名前を入力" maxlength="10" autocomplete="off" />
+        <button class="name-submit-btn" id="name-submit-btn">決定！</button>
+    </div>
+</div>
+
+<div class="conn-status online" id="conn-status">● オンライン</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL      = 'https://jzyjarmagxvljraknbec.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6eWphcm1hZ3h2bGpyYWtuYmVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4Mjc3NDcsImV4cCI6MjA5NDQwMzc0N30.a-V8AikYHUX2axRF22a1ZnpI6c1RKVOogK7mIxLLYAU';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const TABLE        = 'bbq_items';
+const TABLE_PEOPLE = 'participants';
+const CATEGORIES = ['肉', '野菜・果物', '飲み物', '炭水化物', '調味料・その他'];
+const CAT_ICONS  = { '肉':'🥩', '野菜・果物':'🥦', '飲み物':'🍺', '炭水化物':'🍞', '調味料・その他':'🧂' };
+
+let items = [];
+let participants = [];
+let myName = localStorage.getItem('bbq_user_name') || '';
+
+// 名前モーダル制御
+function showNameModal() {
+    document.getElementById('name-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('name-input').focus(), 100);
+}
+function hideNameModal() {
+    document.getElementById('name-modal').classList.add('hidden');
+}
+async function submitName() {
+    const val = document.getElementById('name-input').value.trim();
+    if (!val) return;
+    myName = val;
+    localStorage.setItem('bbq_user_name', myName);
+    hideNameModal();
+    await sb.from(TABLE_PEOPLE).upsert({ name: myName }, { onConflict: 'name' });
+}
+
+document.getElementById('name-submit-btn').addEventListener('click', submitName);
+document.getElementById('name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitName();
+});
+
+if (!myName) {
+    showNameModal();
+} else {
+    sb.from(TABLE_PEOPLE).upsert({ name: myName }, { onConflict: 'name' })
+        .then(({ error }) => { if (error) console.error('upsert error:', error); });
+}
+
+function esc(s) {
+    return String(s ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function load() {
+    const { data, error } = await sb
+        .from(TABLE)
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    if (error) { setConn(false); return; }
+    items = data;
+    render();
+    setConn(true);
+}
+
+async function loadParticipants() {
+    const { data, error } = await sb.from(TABLE_PEOPLE).select('name');
+    if (error) { console.error('participants load error:', error); return; }
+    if (data) {
+        participants = data.map(r => r.name);
+        renderParticipants();
+    }
+}
+
+sb.channel('bbq-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE }, () => load())
+    .subscribe(status => setConn(status === 'SUBSCRIBED'));
+
+sb.channel('participants-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_PEOPLE }, () => loadParticipants())
+    .subscribe();
+
+load();
+loadParticipants();
+
+function setConn(online) {
+    const el = document.getElementById('conn-status');
+    el.textContent = online ? '● オンライン' : '● オフライン';
+    el.className   = 'conn-status ' + (online ? 'online' : 'offline');
+}
+
+function renderParticipants() {
+    document.getElementById('participant-count').textContent = participants.length;
+    const tagsEl = document.getElementById('participant-tags');
+    if (participants.length === 0) {
+        tagsEl.innerHTML = '<span class="no-participants">まだ誰もいません</span>';
+    } else {
+        tagsEl.innerHTML = participants.map(n =>
+            `<span class="participant-tag ${n === myName ? 'me' : ''}">${esc(n)}</span>`
+        ).join('');
+    }
+}
+
+function render() {
+    const total     = items.length;
+    const done      = items.filter(i => i.checked).length;
+    const remaining = total - done;
+    const pct       = total ? Math.round(done / total * 100) : 0;
+
+    renderParticipants();
+
+    document.getElementById('stat-total').textContent     = total;
+    document.getElementById('stat-done').textContent      = done;
+    document.getElementById('stat-remaining').textContent = remaining;
+    document.getElementById('progress-pct').textContent   = pct + '%';
+    document.getElementById('progress-fill').style.width  = pct + '%';
+
+    const container = document.getElementById('items-container');
+
+    if (total === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="icon">🛒</div>
+                <p>まだ何も追加されていません！</p>
+            </div>`;
+        return;
+    }
+
+    const grouped = {};
+    items.forEach(item => {
+        const cat = item.category || '調味料・その他';
+        (grouped[cat] = grouped[cat] || []).push(item);
+    });
+
+    let html = '';
+    CATEGORIES.forEach(cat => {
+        const group = grouped[cat];
+        if (!group?.length) return;
+        html += `<div class="category-section">
+            <div class="category-title">${CAT_ICONS[cat]} ${esc(cat)}</div>`;
+        group.forEach(item => {
+            const voters  = item.voters || [];
+            const voted   = voters.includes(myName);
+            const voterTxt = voters.length ? voters.join('・') : '';
+            html += `
+            <div class="item ${item.checked ? 'checked' : ''}" data-cat="${esc(item.category)}">
+                <input type="checkbox" class="item-checkbox"
+                    ${item.checked ? 'checked' : ''}
+                    onchange="toggleItem('${esc(item.id)}', this.checked)">
+                <div class="item-info">
+                    <div class="item-name">${esc(item.name)}</div>
+                    ${voterTxt ? `<div class="voters">✋ ${esc(voterTxt)}</div>` : ''}
+                </div>
+                <button class="vote-btn ${voted ? 'voted' : ''}" onclick="voteItem('${esc(item.id)}')">
+                    ✋${voters.length ? ' ' + voters.length : ''}
+                </button>
+                <button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>
+            </div>`;
+        });
+        html += '</div>';
+    });
+
+    container.innerHTML = html;
+}
+
+const addBtn = document.getElementById('add-btn');
+async function addItem() {
+    const name     = document.getElementById('item-name').value.trim();
+    const category = document.getElementById('item-category').value;
+    if (!name) { document.getElementById('item-name').focus(); return; }
+
+    addBtn.disabled = true;
+    try {
+        await sb.from(TABLE).insert({ name, category, checked: false });
+        document.getElementById('item-name').value = '';
+        document.getElementById('item-name').focus();
+    } finally {
+        addBtn.disabled = false;
+    }
+}
+
+addBtn.addEventListener('click', addItem);
+document.getElementById('item-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addItem();
+});
+
+async function toggleItem(id, checked) {
+    await sb.from(TABLE).update({ checked }).eq('id', id);
+}
+
+async function voteItem(id) {
+    if (!myName) { showNameModal(); return; }
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    const voters = item.voters || [];
+    const newVoters = voters.includes(myName)
+        ? voters.filter(v => v !== myName)
+        : [...voters, myName];
+    await sb.from(TABLE).update({ voters: newVoters }).eq('id', id);
+}
+
+async function deleteItem(id) {
+    if (confirm('このアイテムを削除しますか？')) {
+        await sb.from(TABLE).delete().eq('id', id);
+    }
+}
+
+// ---- タブ ----
+function switchTab(tab) {
+    document.getElementById('tab-list').classList.toggle('hidden', tab !== 'list');
+    document.getElementById('tab-warikan').classList.toggle('hidden', tab !== 'warikan');
+    document.getElementById('tab-btn-list').classList.toggle('active', tab === 'list');
+    document.getElementById('tab-btn-warikan').classList.toggle('active', tab === 'warikan');
+    if (tab === 'warikan' && !window._peopleManualSet) {
+        peopleCount = Math.max(participants.length, 1);
+        document.getElementById('people-count').textContent = peopleCount;
+        calcWarikan();
+    }
+}
+
+// ---- 割り勘 ----
+const TABLE_CONFIG = 'bbq_config';
+let peopleCount = 1;
+
+async function loadConfig() {
+    const { data } = await sb.from(TABLE_CONFIG).select('value').eq('key', 'total_amount').maybeSingle();
+    if (data) {
+        document.getElementById('total-amount').value = data.value || '';
+        calcWarikan();
+    }
+}
+
+async function saveTotal() {
+    const val = document.getElementById('total-amount').value || '0';
+    await sb.from(TABLE_CONFIG).upsert({ key: 'total_amount', value: val });
+}
+
+function calcWarikan() {
+    const amt = parseInt(document.getElementById('total-amount').value) || 0;
+    const per = peopleCount > 0 ? Math.ceil(amt / peopleCount) : 0;
+    document.getElementById('per-person').textContent = per.toLocaleString();
+}
+
+document.getElementById('total-amount').addEventListener('input', () => { calcWarikan(); saveTotal(); });
+
+document.getElementById('people-minus').addEventListener('click', () => {
+    if (peopleCount <= 1) return;
+    peopleCount--;
+    window._peopleManualSet = true;
+    document.getElementById('people-count').textContent = peopleCount;
+    calcWarikan();
+});
+document.getElementById('people-plus').addEventListener('click', () => {
+    peopleCount++;
+    window._peopleManualSet = true;
+    document.getElementById('people-count').textContent = peopleCount;
+    calcWarikan();
+});
+
+sb.channel('config-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_CONFIG }, () => loadConfig())
+    .subscribe();
+
+loadConfig();
+</script>
+</body>
+</html>
