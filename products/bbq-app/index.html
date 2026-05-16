@@ -413,56 +413,67 @@
             margin-bottom: 12px;
         }
 
-        /* ---- 合計金額入力 ---- */
-        .total-input-row {
+        /* ---- 支払い入力テーブル ---- */
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .payment-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #FFF0E0;
         }
-        .total-amount-input {
+        .payment-row:last-child { border-bottom: none; }
+        .payment-name {
             flex: 1;
-            font-size: 1.6rem;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #555;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        .payment-name.me { color: #FF9F43; }
+        .payment-amount-input {
+            width: 120px;
+            font-size: 1.1rem;
             font-weight: 800;
             text-align: right;
-            padding: 12px 14px;
+            padding: 8px 10px;
             border: 2px solid #FFE0CC;
-            border-radius: 12px;
+            border-radius: 10px;
             font-family: inherit;
             outline: none;
             background: #FFFAF7;
-            min-width: 0;
+            flex-shrink: 0;
         }
-        .total-amount-input:focus { border-color: #FF6B6B; background: white; }
-        .total-yen {
-            font-size: 1.1rem;
+        .payment-amount-input:focus { border-color: #FF6B6B; background: white; }
+        .payment-yen {
+            font-size: 0.9rem;
             font-weight: 800;
             color: #AAA;
             flex-shrink: 0;
         }
-
-        /* ---- 立替者選択 ---- */
-        .payer-select-wrap {
+        .payment-total-row {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid #FFE0CC;
         }
-        .payer-chip {
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 2px solid #FFE0CC;
-            background: #FFFAF7;
-            color: #999;
-            font-size: 0.9rem;
+        .payment-total-label {
+            font-size: 0.85rem;
             font-weight: 800;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.18s;
+            color: #AAA;
         }
-        .payer-chip:hover { border-color: #FF9F43; color: #FF9F43; }
-        .payer-chip.selected {
-            background: #FF9F43;
-            border-color: #FF9F43;
-            color: white;
+        .payment-total-amount {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #FF6B6B;
         }
         .payer-no-participants {
             font-size: 0.85rem;
@@ -737,21 +748,15 @@
 <div id="tab-warikan" class="tab-panel hidden">
     <div class="warikan-wrap">
 
-        <!-- 合計金額入力 -->
+        <!-- 支払い入力カード -->
         <div class="warikan-card">
-            <div class="warikan-label">💴 合計金額</div>
-            <div class="total-input-row">
-                <input type="number" class="total-amount-input" id="total-amount"
-                    placeholder="0" min="0" inputmode="numeric">
-                <span class="total-yen">円</span>
-            </div>
-        </div>
-
-        <!-- 立替者選択 -->
-        <div class="warikan-card">
-            <div class="warikan-label">👤 立替者を選択</div>
-            <div class="payer-select-wrap" id="payer-chips">
+            <div class="warikan-label">💴 各自の支払い額</div>
+            <div id="payment-inputs">
                 <span class="payer-no-participants">参加者を読み込み中…</span>
+            </div>
+            <div class="payment-total-row">
+                <span class="payment-total-label">合計</span>
+                <span><span class="payment-total-amount" id="payment-total">0</span><span class="payment-yen">円</span></span>
             </div>
         </div>
 
@@ -766,7 +771,7 @@
         <div class="warikan-card">
             <div class="warikan-label">━━ 精算リスト ━━</div>
             <div class="settlement-list" id="settlement-list">
-                <div class="settlement-empty">合計金額と立替者を選択してください</div>
+                <div class="settlement-empty">支払い額を入力してください</div>
             </div>
         </div>
 
@@ -1111,66 +1116,47 @@ function switchTab(tab) {
     }
 }
 
-// ========== 割り勘・Walica風立て替え精算 ==========
-let selectedPayer = '';
-let _isOwnSave    = false;
+// ========== 割り勘・複数立替者精算 ==========
+// paymentMap: { 名前: 金額(number) }
+let paymentMap = {};
+let _isOwnSave = false;
 
-// 合計金額をSupabaseから読み込む
-// forceLoad=true のときは _isOwnSave を無視して強制読み込み（ページロード時用）
+// Supabaseから各人の支払い額を読み込む
 async function loadAmountEntries(forceLoad = false) {
     if (!forceLoad && _isOwnSave) return;
 
-    const el = document.getElementById('total-amount');
+    const { data, error } = await sb.from(TABLE_CONFIG).select('key, value');
+    if (error) { console.error('loadAmountEntries error:', error); return; }
 
-    // Supabaseから読み込む
-    const { data } = await sb.from(TABLE_CONFIG)
-        .select('value').eq('key', 'total_amount').maybeSingle();
-
-    // 0以外の有効な値がある場合のみ反映（0は「未設定」として扱う）
-    if (data && data.value != null && data.value !== '0' && data.value !== '') {
-        const numVal = parseInt(data.value);
-        if (!isNaN(numVal) && numVal > 0) {
-            if (el && !el._userEditing) el.value = data.value;
-            localStorage.setItem('bbq_total_amount', data.value);
-            calcSettlement();
-            return;
-        }
+    if (data) {
+        data.forEach(row => {
+            if (row.key.startsWith('payment_')) {
+                const name = row.key.slice('payment_'.length);
+                const v = parseInt(row.value);
+                if (!isNaN(v) && v >= 0) {
+                    paymentMap[name] = v;
+                }
+            }
+        });
     }
-
-    // Supabaseに有効な値がなければlocalStorageをフォールバックとして使用
-    const local = localStorage.getItem('bbq_total_amount');
-    if (local != null && local !== '0' && local !== '' && el && !el._userEditing) {
-        const numLocal = parseInt(local);
-        if (!isNaN(numLocal) && numLocal > 0) {
-            el.value = local;
-        }
-    }
+    renderPaymentInputs();
     calcSettlement();
 }
 
-// 合計金額をSupabaseに保存（0は保存しない）
-async function saveTotalAmount(amount) {
+// 1人分の支払い額をSupabaseに保存
+async function savePayment(name, amount) {
     _isOwnSave = true;
-    if (amount > 0) {
-        localStorage.setItem('bbq_total_amount', String(amount));
-        await sb.from(TABLE_CONFIG).upsert(
-            { key: 'total_amount', value: String(amount) },
-            { onConflict: 'key' }
-        );
-    } else {
-        // 0の場合はlocalStorageとSupabaseをクリア
-        localStorage.removeItem('bbq_total_amount');
-        await sb.from(TABLE_CONFIG).upsert(
-            { key: 'total_amount', value: '' },
-            { onConflict: 'key' }
-        );
-    }
+    const key = 'payment_' + name;
+    await sb.from(TABLE_CONFIG).upsert(
+        { key, value: String(amount) },
+        { onConflict: 'key' }
+    );
     setTimeout(() => { _isOwnSave = false; }, 1200);
 }
 
-// 立替者チップを描画
-function renderPayerChips() {
-    const wrap = document.getElementById('payer-chips');
+// 支払い入力フィールドを描画
+function renderPaymentInputs() {
+    const wrap = document.getElementById('payment-inputs');
     if (!wrap) return;
 
     if (participants.length === 0) {
@@ -1178,111 +1164,150 @@ function renderPayerChips() {
         return;
     }
 
-    // selectedPayerが未設定ならmyNameをデフォルトに
-    if (!selectedPayer && participants.includes(myName)) {
-        selectedPayer = myName;
-    } else if (!selectedPayer && participants.length > 0) {
-        selectedPayer = participants[0];
+    // 既存のDOM inputを確認し、差分だけ更新（フォーカス中の入力を保護）
+    const existingInputs = wrap.querySelectorAll('.payment-amount-input');
+    const existingNames  = Array.from(wrap.querySelectorAll('.payment-name')).map(el => el.dataset.name);
+    const needsRebuild   = existingNames.join(',') !== participants.join(',');
+
+    if (needsRebuild) {
+        // 参加者リストが変わった場合のみ全体再描画
+        wrap.innerHTML = participants.map((name, i) => `
+            <div class="payment-row">
+                <div class="payment-name ${name === myName ? 'me' : ''}" data-name="${esc(name)}">${esc(name)}</div>
+                <input type="number" class="payment-amount-input"
+                    data-payer-index="${i}"
+                    placeholder="0" min="0" inputmode="numeric"
+                    value="${paymentMap[name] != null && paymentMap[name] > 0 ? paymentMap[name] : ''}">
+                <span class="payment-yen">円</span>
+            </div>
+        `).join('');
+
+        // イベント委任（再描画時のみ再設定）
+        wrap.oninput = (e) => {
+            const input = e.target.closest('.payment-amount-input');
+            if (!input) return;
+            const idx = parseInt(input.dataset.payerIndex);
+            if (isNaN(idx) || !participants[idx]) return;
+            const name = participants[idx];
+            const val = parseInt(input.value) || 0;
+            paymentMap[name] = val;
+            updatePaymentTotal();
+            calcSettlement();
+        };
+
+        wrap.onchange = async (e) => {
+            const input = e.target.closest('.payment-amount-input');
+            if (!input) return;
+            const idx = parseInt(input.dataset.payerIndex);
+            if (isNaN(idx) || !participants[idx]) return;
+            const name = participants[idx];
+            const val = parseInt(input.value) || 0;
+            paymentMap[name] = val;
+            await savePayment(name, val);
+        };
+    } else {
+        // 参加者リストが同じ場合はフォーカス外の入力値だけ更新
+        existingInputs.forEach((input, i) => {
+            if (document.activeElement !== input) {
+                const name = participants[i];
+                const newVal = paymentMap[name] != null && paymentMap[name] > 0 ? String(paymentMap[name]) : '';
+                if (input.value !== newVal) input.value = newVal;
+            }
+        });
     }
 
-    wrap.innerHTML = participants.map((name, i) => `
-        <button class="payer-chip ${name === selectedPayer ? 'selected' : ''}"
-            data-payer-index="${i}">${esc(name)}</button>
-    `).join('');
-
-    // イベント委任でクリック処理（名前のシングルクォート対策）
-    wrap.onclick = (e) => {
-        const chip = e.target.closest('.payer-chip');
-        if (!chip) return;
-        const idx = parseInt(chip.dataset.payerIndex);
-        if (!isNaN(idx) && participants[idx]) selectPayer(participants[idx]);
-    };
+    updatePaymentTotal();
 }
 
-function selectPayer(name) {
-    selectedPayer = name;
-    renderPayerChips();
-    calcSettlement();
+function updatePaymentTotal() {
+    const total = participants.reduce((sum, name) => sum + (paymentMap[name] || 0), 0);
+    const el = document.getElementById('payment-total');
+    if (el) el.textContent = total.toLocaleString();
 }
 
-// 精算リストを計算・描画
+// 旧API互換（renderParticipants等から呼ばれる）
+function renderPayerChips() {
+    renderPaymentInputs();
+}
+
+// greedy algorithmで精算リストを計算
 function calcSettlement() {
-    const totalInput = document.getElementById('total-amount');
-    const total = totalInput ? (parseInt(totalInput.value) || 0) : 0;
     const count = participants.length;
-    const perPerson = count > 0 ? Math.ceil(total / count) : 0;
+    const total = participants.reduce((sum, name) => sum + (paymentMap[name] || 0), 0);
 
-    // 1人あたり表示
+    // 1人あたり（小数点以下切り捨て）
+    const perPerson = count > 0 ? Math.floor(total / count) : 0;
+
     const perEl = document.getElementById('per-person');
     if (perEl) perEl.textContent = perPerson.toLocaleString();
 
-    // サブテキスト
     const subEl = document.getElementById('result-sub');
-    if (subEl) {
-        subEl.textContent = count > 0 ? `${count}人で割り勘` : '';
-    }
+    if (subEl) subEl.textContent = count > 0 ? `${total.toLocaleString()}円 ÷ ${count}人` : '';
 
-    // 精算リスト
     const listEl = document.getElementById('settlement-list');
     if (!listEl) return;
 
-    if (total === 0 || !selectedPayer || count === 0) {
-        listEl.innerHTML = '<div class="settlement-empty">合計金額と立替者を選択してください</div>';
+    if (total === 0 || count === 0) {
+        listEl.innerHTML = '<div class="settlement-empty">支払い額を入力してください</div>';
         return;
     }
 
-    const others = participants.filter(n => n !== selectedPayer);
-    const receiveTotal = others.length * perPerson;
+    // 各人のネット残高を計算（正 = 受け取る側、負 = 払う側）
+    const balances = participants.map(name => ({
+        name,
+        balance: (paymentMap[name] || 0) - perPerson
+    }));
 
-    let html = '';
+    // 端数処理: 余りを最初の人に加算（合計が割り切れない場合）
+    const remainder = total - perPerson * count;
+    if (remainder > 0 && balances.length > 0) {
+        balances[0].balance += remainder;
+    }
 
-    // 支払う人たちの行
-    others.forEach(name => {
-        html += `
+    // greedy: 債務者(negative)と債権者(positive)をマッチング
+    const creditors = balances.filter(b => b.balance > 0).map(b => ({ ...b }));
+    const debtors   = balances.filter(b => b.balance < 0).map(b => ({ ...b }));
+
+    // 精算が不要かどうか確認
+    const allZero = balances.every(b => Math.abs(b.balance) < 1);
+    if (allZero) {
+        listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
+        return;
+    }
+
+    const transactions = [];
+    let ci = 0, di = 0;
+    while (ci < creditors.length && di < debtors.length) {
+        const c = creditors[ci];
+        const d = debtors[di];
+        const amount = Math.min(c.balance, -d.balance);
+        if (amount >= 1) {
+            transactions.push({ from: d.name, to: c.name, amount: Math.round(amount) });
+        }
+        c.balance -= amount;
+        d.balance += amount;
+        if (Math.abs(c.balance) < 1) ci++;
+        if (Math.abs(d.balance) < 1) di++;
+    }
+
+    if (transactions.length === 0) {
+        listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
+        return;
+    }
+
+    listEl.innerHTML = transactions.map(t => `
         <div class="settlement-row">
             <span class="settlement-avatar">🙋</span>
             <div class="settlement-info">
-                <div class="settlement-name">${esc(name)}</div>
-                <div class="settlement-arrow">→ <span class="settlement-payer-name">${esc(selectedPayer)}</span> に支払う</div>
+                <div class="settlement-name">${esc(t.from)}</div>
+                <div class="settlement-arrow">→ <span class="settlement-payer-name">${esc(t.to)}</span> に支払う</div>
             </div>
             <div>
-                <span class="settlement-amount">${perPerson.toLocaleString()}</span>
+                <span class="settlement-amount">${t.amount.toLocaleString()}</span>
                 <span class="settlement-yen">円</span>
             </div>
-        </div>`;
-    });
-
-    // 立替者の受け取り行
-    html += `
-    <div class="payer-receive-row">
-        <span class="settlement-avatar">💰</span>
-        <div class="payer-receive-info">
-            <div class="payer-receive-name">${esc(selectedPayer)}（立替者）が受け取る</div>
-            <div class="payer-receive-sub">自己負担: ${perPerson.toLocaleString()}円</div>
         </div>
-        <div>
-            <span class="payer-receive-amount">${receiveTotal.toLocaleString()}</span>
-            <span class="settlement-yen">円</span>
-        </div>
-    </div>`;
-
-    listEl.innerHTML = html;
-}
-
-// 合計金額入力イベント
-const totalAmountInput = document.getElementById('total-amount');
-if (totalAmountInput) {
-    totalAmountInput._userEditing = false;
-    totalAmountInput.addEventListener('focus', () => { totalAmountInput._userEditing = true; });
-    totalAmountInput.addEventListener('blur', async () => {
-        totalAmountInput._userEditing = false;
-        const v = parseInt(totalAmountInput.value) || 0;
-        calcSettlement();
-        await saveTotalAmount(v);
-    });
-    totalAmountInput.addEventListener('input', () => {
-        calcSettlement();
-    });
+    `).join('');
 }
 </script>
 </body>
