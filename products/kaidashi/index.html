@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛒 カイダシ</title>
+    <meta name="description" content="イベントごとに買い出しと割り勘をみんなで管理！">
+    <meta property="og:title" content="🛒 カイダシ">
+    <meta property="og:description" content="イベントごとに買い出しと割り勘をみんなで管理！">
+    <meta property="og:type" content="website">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            background: #F0FBF7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        /* ---- ヒーロー ---- */
+        .hero {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .hero-icon {
+            font-size: 5rem;
+            margin-bottom: 14px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-10px); }
+        }
+        .hero h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1ABC9C, #2ECC71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: 0.04em;
+        }
+        .hero p {
+            font-size: 0.88rem;
+            color: #8ABFB0;
+            font-weight: 600;
+        }
+
+        /* ---- カード ---- */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(26, 188, 156, 0.12);
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #A0C8BE;
+            margin-bottom: 16px;
+            letter-spacing: 0.06em;
+        }
+
+        /* ---- 入力 ---- */
+        input[type="text"] {
+            width: 100%;
+            border: 2px solid #C8EDE6;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            font-family: inherit;
+            font-weight: 700;
+            outline: none;
+            background: #F7FDFB;
+            color: #333;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            margin-bottom: 12px;
+        }
+        input[type="text"]:focus {
+            border-color: #1ABC9C;
+            box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.15);
+            background: white;
+        }
+        input[type="text"]::placeholder { color: #B2D8D0; font-weight: 400; }
+
+        /* ---- ボタン ---- */
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #1ABC9C, #2ECC71);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 15px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 16px rgba(26, 188, 156, 0.4);
+            letter-spacing: 0.04em;
+        }
+        .btn-primary:hover  { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(26, 188, 156, 0.5); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-primary:disabled {
+            background: linear-gradient(135deg, #A8E6DA, #B8F0C8);
+            box-shadow: none; cursor: default; transform: none;
+        }
+
+        /* ---- エラー ---- */
+        .error-msg {
+            font-size: 0.82rem;
+            color: #E74C3C;
+            font-weight: 700;
+            margin-top: -6px;
+            margin-bottom: 10px;
+            min-height: 1.2em;
+        }
+
+        /* ---- 最近のイベント ---- */
+        .recent-list { display: flex; flex-direction: column; gap: 10px; }
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #F0FBF7;
+            border-radius: 14px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: background 0.18s, transform 0.15s;
+            text-decoration: none;
+        }
+        .recent-item:hover { background: #D5F5EC; transform: translateX(4px); }
+        .recent-icon { font-size: 1.4rem; flex-shrink: 0; }
+        .recent-info { flex: 1; min-width: 0; }
+        .recent-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #2C7A6C;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .recent-code { font-size: 0.75rem; color: #8ABFB0; font-weight: 700; margin-top: 2px; }
+        .recent-arrow { font-size: 1rem; color: #1ABC9C; font-weight: 800; flex-shrink: 0; }
+        .no-recent { text-align: center; color: #B2D8D0; font-size: 0.85rem; font-weight: 700; padding: 8px 0; }
+
+        /* ---- 作成成功モーダル ---- */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 24px;
+        }
+        .modal.hidden { display: none; }
+        .modal-box {
+            background: white;
+            border-radius: 28px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+            animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes popIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+        .modal-icon { font-size: 3.5rem; margin-bottom: 14px; display: block; }
+        .modal-box h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; color: #2C7A6C; }
+        .modal-box p  { font-size: 0.88rem; color: #8ABFB0; font-weight: 700; margin-bottom: 20px; }
+
+        .url-display {
+            background: #F0FBF7;
+            border: 2px solid #C8EDE6;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #1ABC9C;
+            word-break: break-all;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+        .url-display:hover { background: #D5F5EC; }
+        .copy-hint { font-size: 0.78rem; color: #B2D8D0; font-weight: 700; margin-bottom: 20px; }
+        .copy-hint.copied { color: #1ABC9C; }
+
+        .btn-open {
+            width: 100%;
+            background: linear-gradient(135deg, #1ABC9C, #2ECC71);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 15px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(26, 188, 156, 0.4);
+            margin-bottom: 10px;
+            transition: transform 0.15s;
+        }
+        .btn-open:hover { transform: translateY(-2px); }
+        .btn-close {
+            width: 100%;
+            background: #F0F0F0;
+            color: #999;
+            border: none;
+            border-radius: 14px;
+            padding: 13px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <span class="hero-icon">🛒</span>
+    <h1>カイダシ</h1>
+    <p>イベントごとに買い出しと割り勘を管理！</p>
+</div>
+
+<!-- イベント作成 -->
+<div class="card">
+    <div class="card-title">✨ 新しいイベントを作成</div>
+    <input type="text" id="event-name-input"
+        placeholder="例: 夏の買い出し・歓迎会の準備"
+        maxlength="30" autocomplete="off" />
+    <div class="error-msg" id="create-error"></div>
+    <button class="btn-primary" id="create-btn">🛒 イベントを作成する</button>
+</div>
+
+<!-- 最近のイベント -->
+<div class="card">
+    <div class="card-title">📋 最近のイベント</div>
+    <div class="recent-list" id="recent-list">
+        <div class="no-recent">まだ参加したイベントはありません</div>
+    </div>
+</div>
+
+<!-- 作成成功モーダル -->
+<div class="modal hidden" id="success-modal">
+    <div class="modal-box">
+        <span class="modal-icon">🎉</span>
+        <h2>イベント作成完了！</h2>
+        <p>URLをみんなに共有しましょう</p>
+        <div class="url-display" id="event-url" onclick="copyUrl()"></div>
+        <div class="copy-hint" id="copy-hint">タップでコピー</div>
+        <button class="btn-open" id="open-btn">このイベントを開く 🛒</button>
+        <button class="btn-close" onclick="closeModal()">あとで開く</button>
+    </div>
+</div>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    integrity="sha384-UOGhq3B1X7KSNbx/mDSvY1KNiMPyJLv7FLynxFxvuRK3sJGS8E5t9FJL6Gzfe8+"
+    crossorigin="anonymous"
+    onerror="document.body.innerHTML='<p style=padding:20px;color:red>リソースの読み込みに失敗しました。ページを再読み込みしてください。</p>'">
+</script>
+<script>
+const SUPABASE_URL      = 'https://akovhthopauhmlbcjjfw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrb3ZodGhvcGF1aG1sYmNqamZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MjgxMzgsImV4cCI6MjA5NDUwNDEzOH0.BZPdBmMm6kGbcwCavUFj5xGoQqaS5r3T9E7kjXWlqKI';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function generateEventCode() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return Array.from(crypto.getRandomValues(new Uint8Array(8)))
+        .map(b => chars[b % chars.length]).join('');
+}
+
+function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function loadRecentEvents() {
+    let recent = [];
+    try { recent = JSON.parse(localStorage.getItem('kaidashi_recent') || '[]'); } catch {}
+    const listEl = document.getElementById('recent-list');
+    if (!recent.length) {
+        listEl.innerHTML = '<div class="no-recent">まだ参加したイベントはありません</div>';
+        return;
+    }
+    listEl.innerHTML = recent.slice(0, 5).map(ev => `
+        <a class="recent-item" href="app.html?event=${encodeURIComponent(ev.code)}">
+            <span class="recent-icon">🛒</span>
+            <div class="recent-info">
+                <div class="recent-name">${esc(ev.name)}</div>
+                <div class="recent-code">コード: ${esc(ev.code)}</div>
+            </div>
+            <span class="recent-arrow">›</span>
+        </a>`).join('');
+}
+
+function saveRecentEvent(code, name) {
+    let recent = [];
+    try { recent = JSON.parse(localStorage.getItem('kaidashi_recent') || '[]'); } catch {}
+    recent = recent.filter(ev => ev.code !== code);
+    recent.unshift({ code, name });
+    localStorage.setItem('kaidashi_recent', JSON.stringify(recent.slice(0, 10)));
+}
+
+let createdEventUrl = '';
+
+async function createEvent() {
+    const nameInput = document.getElementById('event-name-input');
+    const errorEl   = document.getElementById('create-error');
+    const btn       = document.getElementById('create-btn');
+    const name      = nameInput.value.trim();
+
+    if (!name) { errorEl.textContent = 'イベント名を入力してください'; nameInput.focus(); return; }
+    errorEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = '作成中…';
+
+    try {
+        const event_code = generateEventCode();
+        const { data, error } = await sb.from('events')
+            .insert({ event_code, name }).select().single();
+
+        if (error) { errorEl.textContent = '作成に失敗しました。もう一度お試しください。'; return; }
+
+        saveRecentEvent(data.event_code, data.name);
+        createdEventUrl = `${location.origin}${location.pathname.replace('index.html','')}app.html?event=${data.event_code}`;
+
+        document.getElementById('event-url').textContent = createdEventUrl;
+        document.getElementById('success-modal').classList.remove('hidden');
+        document.getElementById('open-btn').onclick = () => { location.href = `app.html?event=${data.event_code}`; };
+        nameInput.value = '';
+        loadRecentEvents();
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🛒 イベントを作成する';
+    }
+}
+
+function copyUrl() {
+    navigator.clipboard.writeText(createdEventUrl).then(() => {
+        const hint = document.getElementById('copy-hint');
+        hint.textContent = 'コピーしました！✓';
+        hint.classList.add('copied');
+        setTimeout(() => { hint.textContent = 'タップでコピー'; hint.classList.remove('copied'); }, 2000);
+    });
+}
+
+function closeModal() { document.getElementById('success-modal').classList.add('hidden'); }
+
+document.getElementById('create-btn').addEventListener('click', createEvent);
+document.getElementById('event-name-input').addEventListener('keydown', e => { if (e.key === 'Enter') createEvent(); });
+
+loadRecentEvents();
+</script>
+</body>
+</html>

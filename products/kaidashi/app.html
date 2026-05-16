@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛒 カイダシ</title>
+    <meta name="description" content="買い出しをみんなで管理しよう！">
+    <meta property="og:title" content="🛒 カイダシ">
+    <meta property="og:description" content="買い出しをみんなで管理しよう！">
+    <meta property="og:type" content="website">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            background: #F0FBF7;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* ---- ヘッダー ---- */
+        header {
+            background: linear-gradient(135deg, #1ABC9C 0%, #2ECC71 100%);
+            color: white;
+            padding: 28px 16px 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.07'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        header h1 { font-size: 1.8rem; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,0.12); position: relative; }
+        header p { font-size: 0.85rem; opacity: 0.85; margin-top: 6px; position: relative; }
+
+        .header-back {
+            position: absolute; top: 14px; left: 14px;
+            background: rgba(255,255,255,0.22); color: white;
+            border: none; border-radius: 20px; padding: 6px 14px;
+            font-size: 0.8rem; font-weight: 800; font-family: inherit;
+            cursor: pointer; text-decoration: none; display: inline-block;
+            transition: background 0.18s; z-index: 1;
+        }
+        .header-back:hover { background: rgba(255,255,255,0.38); }
+
+        .share-btn {
+            position: absolute; top: 14px; right: 14px;
+            background: rgba(255,255,255,0.22); color: white;
+            border: none; border-radius: 20px; padding: 6px 14px;
+            font-size: 0.8rem; font-weight: 800; font-family: inherit;
+            cursor: pointer; transition: background 0.18s; z-index: 1;
+        }
+        .share-btn:hover { background: rgba(255,255,255,0.38); }
+
+        /* ---- タブ ---- */
+        .tabs {
+            display: flex; background: white;
+            margin: 0 14px;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 4px 14px rgba(26,188,156,0.12);
+            overflow: hidden;
+        }
+        .tab-btn {
+            flex: 1; padding: 13px 8px; border: none; background: none;
+            font-family: inherit; font-size: 0.9rem; font-weight: 800;
+            color: #B2D8D0; cursor: pointer;
+            transition: color 0.2s, border-bottom 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-btn.active { color: #1ABC9C; border-bottom-color: #1ABC9C; }
+        .tab-panel.hidden { display: none; }
+
+        /* ---- フォーム ---- */
+        .add-form {
+            background: white; margin: -14px 14px 0; padding: 18px;
+            border-radius: 20px; box-shadow: 0 8px 24px rgba(26,188,156,0.13);
+            position: relative; z-index: 1;
+        }
+        input[type="text"], select {
+            border: 2px solid #C8EDE6; border-radius: 12px;
+            padding: 12px 14px; font-size: 1rem; font-family: inherit;
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+            background: #F7FDFB; width: 100%;
+        }
+        input[type="text"]:focus, select:focus {
+            border-color: #1ABC9C;
+            box-shadow: 0 0 0 3px rgba(26,188,156,0.15);
+            background: white;
+        }
+        .input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        #item-category { width: 100%; margin-bottom: 10px; }
+        .add-btn {
+            width: 100%; background: linear-gradient(135deg, #1ABC9C, #2ECC71);
+            color: white; border: none; border-radius: 14px; padding: 14px;
+            font-size: 1.05rem; font-weight: 800; font-family: inherit;
+            cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 14px rgba(26,188,156,0.4); letter-spacing: 0.05em;
+        }
+        .add-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,188,156,0.5); }
+        .add-btn:active { transform: scale(0.97); }
+        .add-btn:disabled { background: linear-gradient(135deg, #A8E6DA, #B8F0C8); box-shadow: none; cursor: default; }
+
+        /* ---- 統計 ---- */
+        .stats { display: flex; gap: 10px; margin: 14px 14px 0; }
+        .stat { flex: 1; text-align: center; padding: 14px 8px; border-radius: 16px; font-weight: 800; }
+        .stat:nth-child(1) { background: #E8F8F4; }
+        .stat:nth-child(2) { background: #E8F8E8; }
+        .stat:nth-child(3) { background: #E8F4FF; }
+        .stat-num { font-size: 1.8rem; }
+        .stat:nth-child(1) .stat-num { color: #1ABC9C; }
+        .stat:nth-child(2) .stat-num { color: #2ECC71; }
+        .stat:nth-child(3) .stat-num { color: #5C7CFA; }
+        .stat-label { font-size: 0.7rem; color: #999; margin-top: 2px; font-weight: 700; }
+
+        /* ---- 参加者 ---- */
+        .participants-wrap {
+            margin: 10px 14px 0; background: white; border-radius: 16px;
+            padding: 14px 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .participants-header { font-size: 0.82rem; font-weight: 800; color: #A0C8BE; margin-bottom: 10px; }
+        .participants-header span { color: #1ABC9C; }
+        .participant-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .participant-tag {
+            background: #F0FBF7; border: 2px solid #C8EDE6; color: #1ABC9C;
+            border-radius: 20px; padding: 4px 12px; font-size: 0.82rem;
+            font-weight: 800; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .participant-tag.me { background: #1ABC9C; border-color: #1ABC9C; color: white; cursor: pointer; }
+        .no-participants { font-size: 0.82rem; color: #B2D8D0; font-weight: 700; }
+        .participant-tag-remove {
+            background: none; border: none; color: #A8DED4;
+            font-size: 0.7rem; cursor: pointer; padding: 0;
+            line-height: 1; font-weight: 800; transition: color 0.18s;
+        }
+        .participant-tag-remove:hover { color: #E74C3C; }
+        .participant-add-btn {
+            background: #F0FBF7; border: 2px dashed #C8EDE6; color: #1ABC9C;
+            border-radius: 20px; padding: 4px 12px; font-size: 0.82rem;
+            font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.18s;
+        }
+        .participant-add-btn:hover { background: #D5F5EC; border-color: #1ABC9C; }
+        .participant-add-form { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+        .participant-add-form.hidden { display: none; }
+        .participant-name-input {
+            border: 2px solid #C8EDE6; border-radius: 12px; padding: 6px 12px;
+            font-size: 0.88rem; font-family: inherit; outline: none;
+            background: #F7FDFB; flex: 1; font-weight: 700;
+        }
+        .participant-name-input:focus { border-color: #1ABC9C; box-shadow: 0 0 0 2px rgba(26,188,156,0.15); }
+        .participant-name-confirm {
+            background: linear-gradient(135deg, #1ABC9C, #2ECC71); color: white;
+            border: none; border-radius: 10px; padding: 7px 14px;
+            font-size: 0.85rem; font-weight: 800; font-family: inherit; cursor: pointer; white-space: nowrap;
+        }
+        .participant-name-cancel {
+            background: #F0F0F0; color: #999; border: none; border-radius: 10px;
+            padding: 7px 10px; font-size: 0.85rem; font-weight: 800; font-family: inherit; cursor: pointer;
+        }
+
+        /* ---- 名前変更モーダル ---- */
+        .rename-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; z-index: 110; padding: 20px;
+        }
+        .rename-modal.hidden { display: none; }
+        .rename-modal-box {
+            background: white; border-radius: 24px; padding: 28px 24px;
+            width: 100%; max-width: 340px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+        .rename-modal-box .icon { font-size: 3rem; margin-bottom: 12px; }
+        .rename-modal-box h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; color: #2C7A6C; }
+        .rename-modal-box p  { font-size: 0.85rem; color: #999; margin-bottom: 18px; }
+        .rename-input {
+            border: 2px solid #C8EDE6; border-radius: 12px; padding: 12px 14px;
+            font-size: 1rem; font-family: inherit; outline: none;
+            width: 100%; margin-bottom: 12px; text-align: center; font-weight: 700;
+        }
+        .rename-input:focus { border-color: #1ABC9C; }
+        .rename-submit-btn {
+            width: 100%; background: linear-gradient(135deg, #1ABC9C, #2ECC71); color: white;
+            border: none; border-radius: 12px; padding: 13px;
+            font-size: 1rem; font-weight: 800; font-family: inherit; cursor: pointer; margin-bottom: 8px;
+        }
+        .rename-cancel-btn {
+            width: 100%; background: #F0F0F0; color: #999; border: none;
+            border-radius: 12px; padding: 11px; font-size: 0.9rem;
+            font-weight: 800; font-family: inherit; cursor: pointer;
+        }
+
+        /* ---- プログレスバー ---- */
+        .progress-wrap {
+            margin: 10px 14px 0; background: white; border-radius: 16px;
+            padding: 14px 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .progress-label { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; color: #A0C8BE; margin-bottom: 8px; }
+        .progress-label span:last-child { color: #1ABC9C; }
+        .progress-bar { height: 10px; background: #D5F5EC; border-radius: 10px; overflow: hidden; }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #1ABC9C, #2ECC71);
+            border-radius: 10px; transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ---- カテゴリ別リスト ---- */
+        .category-section { margin: 14px 14px 0; }
+        .category-title { font-size: 0.85rem; font-weight: 800; color: #888; margin-bottom: 8px; padding-left: 4px; letter-spacing: 0.06em; }
+
+        /* ---- アイテムカード ---- */
+        .item {
+            background: white; border-radius: 14px; padding: 14px;
+            margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 4px solid transparent; transition: opacity 0.3s, transform 0.15s;
+        }
+        .item:active { transform: scale(0.99); }
+        .item[data-cat="食品"]       { border-left-color: #1ABC9C; }
+        .item[data-cat="飲み物"]     { border-left-color: #3498DB; }
+        .item[data-cat="日用品"]     { border-left-color: #F39C12; }
+        .item[data-cat="野菜・果物"] { border-left-color: #2ECC71; }
+        .item[data-cat="その他"]     { border-left-color: #9B59B6; }
+        .item.checked { opacity: 0.45; }
+        .item.checked .item-name { text-decoration: line-through; }
+        .item-checkbox { width: 24px; height: 24px; cursor: pointer; accent-color: #1ABC9C; flex-shrink: 0; }
+        .item-name { font-size: 1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .checker { font-size: 0.72rem; color: #2ECC71; font-weight: 700; margin-top: 2px; }
+        .voters-wrap { margin-top: 3px; }
+        .voters-short, .voters-full {
+            font-size: 0.75rem; color: #1ABC9C; font-weight: 700;
+            cursor: pointer; display: block; line-height: 1.5;
+        }
+        .voters-short { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .voters-full { white-space: normal; word-break: break-all; }
+        .voters-toggle-icon { font-size: 0.65rem; opacity: 0.75; }
+        .hidden { display: none !important; }
+        .delete-btn {
+            background: #FFF0F0; border: none; color: #FFAAAA;
+            cursor: pointer; font-size: 0.9rem; padding: 6px 8px;
+            border-radius: 8px; transition: color 0.18s, background 0.18s;
+            flex-shrink: 0; font-weight: 800;
+        }
+        .delete-btn:hover { color: #E74C3C; background: #FFE0E0; }
+        .vote-btn {
+            background: #F0FBF7; border: 2px solid #C8EDE6; color: #1ABC9C;
+            cursor: pointer; font-size: 0.85rem; padding: 5px 10px;
+            border-radius: 20px; font-weight: 800; font-family: inherit;
+            transition: all 0.18s; flex-shrink: 0; white-space: nowrap;
+        }
+        .vote-btn:hover { background: #D5F5EC; border-color: #1ABC9C; }
+        .vote-btn.voted { background: #1ABC9C; border-color: #1ABC9C; color: white; }
+        .item-info { flex: 1; min-width: 0; }
+
+        /* ---- 名前入力モーダル ---- */
+        .name-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+        }
+        .name-modal.hidden { display: none; }
+        .name-modal-box {
+            background: white; border-radius: 24px; padding: 28px 24px;
+            width: 100%; max-width: 340px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+        .name-modal-box .icon { font-size: 3rem; margin-bottom: 12px; }
+        .name-modal-box h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; color: #2C7A6C; }
+        .name-modal-box p  { font-size: 0.85rem; color: #999; margin-bottom: 18px; }
+        .name-input {
+            border: 2px solid #C8EDE6; border-radius: 12px; padding: 12px 14px;
+            font-size: 1rem; font-family: inherit; outline: none;
+            width: 100%; margin-bottom: 12px; text-align: center; font-weight: 700;
+        }
+        .name-input:focus { border-color: #1ABC9C; }
+        .name-submit-btn {
+            width: 100%; background: linear-gradient(135deg, #1ABC9C, #2ECC71); color: white;
+            border: none; border-radius: 12px; padding: 13px;
+            font-size: 1rem; font-weight: 800; font-family: inherit; cursor: pointer;
+        }
+
+        /* ---- 空状態 ---- */
+        .empty-state { text-align: center; padding: 56px 20px; color: #B2D8D0; }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 14px; }
+        .empty-state p { font-size: 1rem; font-weight: 700; }
+
+        /* ---- 割り勘 ---- */
+        .warikan-wrap { margin: 14px 14px 0; display: flex; flex-direction: column; gap: 12px; }
+        .warikan-card { background: white; border-radius: 16px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .warikan-label { font-size: 0.8rem; font-weight: 800; color: #A0C8BE; margin-bottom: 12px; }
+        .wf-section-label { font-size: 0.8rem; font-weight: 800; color: #A0C8BE; margin-bottom: 8px; }
+        .wf-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+        .wf-chip {
+            background: #F0FBF7; border: 2px solid #C8EDE6; color: #1ABC9C;
+            border-radius: 20px; padding: 5px 14px; font-size: 0.85rem;
+            font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.18s;
+        }
+        .wf-chip:hover { background: #D5F5EC; border-color: #1ABC9C; }
+        .wf-chip.selected { background: #1ABC9C; border-color: #1ABC9C; color: white; box-shadow: 0 3px 10px rgba(26,188,156,0.4); }
+        .wf-chip.me-chip { border-color: #2ECC71; color: #2ECC71; }
+        .wf-chip.me-chip.selected { background: linear-gradient(135deg, #1ABC9C, #2ECC71); border-color: #1ABC9C; color: white; }
+        .wf-amount-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .wf-amount-input {
+            flex: 1; font-size: 1.6rem; font-weight: 800; text-align: right;
+            padding: 10px 14px; border: 2px solid #C8EDE6; border-radius: 12px;
+            font-family: inherit; outline: none; background: #F7FDFB;
+        }
+        .wf-amount-input:focus { border-color: #1ABC9C; box-shadow: 0 0 0 3px rgba(26,188,156,0.15); background: white; }
+        .wf-amount-yen { font-size: 1.1rem; font-weight: 800; color: #A0C8BE; flex-shrink: 0; }
+        .wf-add-btn {
+            width: 100%; background: linear-gradient(135deg, #1ABC9C, #2ECC71); color: white;
+            border: none; border-radius: 14px; padding: 13px;
+            font-size: 1rem; font-weight: 800; font-family: inherit; cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 14px rgba(26,188,156,0.4);
+        }
+        .wf-add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,188,156,0.5); }
+        .wf-add-btn:active { transform: scale(0.97); }
+        .wf-add-btn:disabled { background: linear-gradient(135deg, #A8E6DA, #B8F0C8); box-shadow: none; cursor: default; transform: none; }
+        .wf-note-input {
+            width: 100%; font-size: 0.95rem; font-weight: 700; padding: 10px 14px;
+            border: 2px solid #C8EDE6; border-radius: 12px; font-family: inherit;
+            outline: none; background: #F7FDFB;
+        }
+        .wf-note-input:focus { border-color: #1ABC9C; box-shadow: 0 0 0 3px rgba(26,188,156,0.15); background: white; }
+        .entry-note { font-size: 0.78rem; color: #1ABC9C; font-weight: 700; margin-top: 3px; }
+        .payer-no-participants { font-size: 0.85rem; color: #B2D8D0; font-weight: 700; }
+        .entry-list { display: flex; flex-direction: column; gap: 8px; }
+        .entry-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            background: #F7FDFB; border-radius: 12px; padding: 12px 14px;
+            border-left: 4px solid #1ABC9C;
+        }
+        .entry-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+        .entry-info { flex: 1; min-width: 0; }
+        .entry-main { font-size: 0.9rem; font-weight: 800; color: #555; line-height: 1.4; }
+        .entry-main .entry-payer { color: #1ABC9C; }
+        .entry-main .entry-amount { color: #2ECC71; }
+        .entry-members { font-size: 0.75rem; color: #A0C8BE; font-weight: 700; margin-top: 3px; }
+        .entry-delete-btn {
+            background: #FFF0F0; border: none; color: #FFAAAA; cursor: pointer;
+            font-size: 0.9rem; padding: 5px 8px; border-radius: 8px;
+            transition: color 0.18s, background 0.18s; flex-shrink: 0; font-weight: 800;
+        }
+        .entry-delete-btn:hover { color: #E74C3C; background: #FFE0E0; }
+        .entry-empty { text-align: center; color: #B2D8D0; font-size: 0.85rem; font-weight: 700; padding: 16px 0; }
+        .settlement-list { display: flex; flex-direction: column; gap: 10px; }
+        .settlement-row { display: flex; align-items: center; gap: 10px; background: #F7FDFB; border-radius: 12px; padding: 12px 14px; }
+        .settlement-avatar { font-size: 1.3rem; flex-shrink: 0; }
+        .settlement-info { flex: 1; min-width: 0; }
+        .settlement-name { font-size: 0.9rem; font-weight: 800; color: #555; }
+        .settlement-arrow { font-size: 0.78rem; color: #A0C8BE; font-weight: 700; }
+        .settlement-payer-name { color: #1ABC9C; }
+        .settlement-amount { font-size: 1.2rem; font-weight: 800; color: #2ECC71; flex-shrink: 0; }
+        .settlement-yen { font-size: 0.8rem; color: #A0C8BE; font-weight: 700; }
+        .settlement-empty { text-align: center; color: #B2D8D0; font-size: 0.85rem; font-weight: 700; padding: 16px 0; }
+        .warikan-result {
+            background: linear-gradient(135deg, #1ABC9C, #2ECC71);
+            border-radius: 20px; padding: 22px 20px; text-align: center;
+            box-shadow: 0 8px 24px rgba(26,188,156,0.3);
+        }
+        .warikan-result .result-label { font-size: 0.9rem; font-weight: 800; color: rgba(255,255,255,0.85); margin-bottom: 8px; }
+        .warikan-result .result-num { font-size: 3.2rem; font-weight: 800; color: white; line-height: 1; }
+        .warikan-result .result-yen { font-size: 1.3rem; font-weight: 800; color: rgba(255,255,255,0.85); margin-left: 4px; }
+        .warikan-result .result-sub { font-size: 0.78rem; color: rgba(255,255,255,0.7); margin-top: 6px; font-weight: 700; }
+        .settlement-filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .settlement-filter-chip {
+            background: #F0FBF7; border: 2px solid #C8EDE6; color: #1ABC9C;
+            border-radius: 20px; padding: 6px 16px; font-size: 0.88rem;
+            font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.18s;
+        }
+        .settlement-filter-chip:hover { background: #D5F5EC; border-color: #1ABC9C; }
+        .settlement-filter-chip.selected { background: #1ABC9C; border-color: #1ABC9C; color: white; box-shadow: 0 3px 10px rgba(26,188,156,0.4); }
+        .settlement-filter-chip.me-chip { border-color: #2ECC71; color: #2ECC71; }
+        .settlement-filter-chip.me-chip.selected { background: linear-gradient(135deg, #1ABC9C, #2ECC71); border-color: #1ABC9C; color: white; }
+        .settlement-filter-chip.all-chip { background: #F5F5F5; border-color: #DDD; color: #888; }
+        .settlement-filter-chip.all-chip:hover { background: #E8E8E8; border-color: #BBB; }
+        .settlement-filter-chip.all-chip.selected { background: #888; border-color: #888; color: white; }
+
+        /* ---- 長押し ---- */
+        .checkbox-wrap {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; flex-shrink: 0; cursor: pointer;
+            border-radius: 50%; transition: background 0.15s;
+        }
+        .checkbox-wrap:active { background: rgba(26,188,156,0.12); }
+        .hold-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; pointer-events: none; }
+        .checkbox-wrap.holding .hold-ring { border-color: #1ABC9C; animation: fillRing 0.5s linear forwards; }
+        @keyframes fillRing {
+            0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
+            100% { clip-path: inset(0 0% 0 0);   opacity: 1; }
+        }
+        .hold-hint {
+            position: fixed; bottom: 70px; left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(0,0,0,0.72); color: white;
+            font-size: 0.82rem; font-weight: 700; padding: 8px 18px;
+            border-radius: 20px; opacity: 0; pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s; z-index: 200; white-space: nowrap;
+        }
+        .hold-hint.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ---- 接続ステータス ---- */
+        .conn-status {
+            position: fixed; bottom: 20px; right: 16px;
+            border-radius: 20px; padding: 7px 16px; font-size: 0.8rem;
+            font-weight: 800; box-shadow: 0 4px 14px rgba(0,0,0,0.15); font-family: inherit;
+        }
+        .conn-status.online  { background: #2ECC71; color: white; }
+        .conn-status.offline { background: #E74C3C; color: white; }
+        .loading { text-align: center; padding: 56px; color: #1ABC9C; font-size: 1rem; font-weight: 700; }
+
+        /* ---- イベント無効 ---- */
+        .invalid-event {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 100vh; padding: 40px 24px; text-align: center;
+        }
+        .invalid-event .icon { font-size: 4rem; margin-bottom: 16px; }
+        .invalid-event h2 { font-size: 1.3rem; font-weight: 800; color: #555; margin-bottom: 8px; }
+        .invalid-event p  { font-size: 0.9rem; color: #A0C8BE; font-weight: 700; margin-bottom: 24px; }
+        .btn-home {
+            background: linear-gradient(135deg, #1ABC9C, #2ECC71); color: white;
+            border: none; border-radius: 14px; padding: 14px 28px;
+            font-size: 1rem; font-weight: 800; font-family: inherit;
+            cursor: pointer; text-decoration: none; display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+const urlParams  = new URLSearchParams(location.search);
+const EVENT_CODE = urlParams.get('event');
+if (!EVENT_CODE) location.href = 'index.html';
+</script>
+
+<!-- イベント無効 -->
+<div id="invalid-screen" class="invalid-event hidden">
+    <div class="icon">🔍</div>
+    <h2>イベントが見つかりません</h2>
+    <p>URLが間違っているか、イベントが存在しません</p>
+    <a class="btn-home" href="index.html">トップへ戻る</a>
+</div>
+
+<!-- メインコンテンツ -->
+<div id="main-content" class="hidden">
+
+<header>
+    <a class="header-back" href="index.html">← トップ</a>
+    <h1>🛒 カイダシ</h1>
+    <p id="event-name-display">読み込み中…</p>
+    <button class="share-btn" onclick="shareEvent()">🔗 共有</button>
+</header>
+
+<div class="tabs">
+    <button class="tab-btn active" id="tab-btn-list" onclick="switchTab('list')">🛒 買い出しリスト</button>
+    <button class="tab-btn" id="tab-btn-warikan" onclick="switchTab('warikan')">💰 割り勘</button>
+</div>
+
+<div id="tab-list" class="tab-panel">
+    <div class="add-form">
+        <div class="input-row">
+            <input type="text" id="item-name" placeholder="品目を入力（例: 牛乳・お茶・洗剤）" autocomplete="off" />
+        </div>
+        <select id="item-category">
+            <option value="食品">🍱 食品</option>
+            <option value="飲み物">🥤 飲み物</option>
+            <option value="野菜・果物">🥦 野菜・果物</option>
+            <option value="日用品">🧴 日用品</option>
+            <option value="その他">📦 その他</option>
+        </select>
+        <button class="add-btn" id="add-btn">＋ リストに追加！</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">合計</div></div>
+        <div class="stat"><div class="stat-num" id="stat-done">0</div><div class="stat-label">購入済み</div></div>
+        <div class="stat"><div class="stat-num" id="stat-remaining">0</div><div class="stat-label">残り</div></div>
+    </div>
+
+    <div class="participants-wrap">
+        <div class="participants-header">👥 参加者 <span id="participant-count">0</span>人</div>
+        <div class="participant-tags" id="participant-tags">
+            <span class="no-participants">まだ誰もいません</span>
+        </div>
+        <div class="participant-add-form hidden" id="participant-add-form">
+            <input type="text" class="participant-name-input" id="participant-name-input"
+                placeholder="名前を入力" maxlength="10" autocomplete="off" />
+            <button class="participant-name-confirm" id="participant-name-confirm">追加</button>
+            <button class="participant-name-cancel" id="participant-name-cancel">✕</button>
+        </div>
+    </div>
+
+    <div class="progress-wrap">
+        <div class="progress-label"><span>進捗</span><span id="progress-pct">0%</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <div id="items-container"><div class="loading">読み込み中…🛒</div></div>
+</div>
+
+<div id="tab-warikan" class="tab-panel hidden">
+    <div class="warikan-wrap">
+        <div class="warikan-card">
+            <div class="warikan-label">💳 支払いを追加</div>
+            <div class="wf-section-label">払った人</div>
+            <div id="wf-payer-chips" class="wf-chips"><span class="payer-no-participants">参加者を読み込み中…</span></div>
+            <div class="wf-section-label">金額</div>
+            <div class="wf-amount-row">
+                <input type="number" class="wf-amount-input" id="wf-amount" placeholder="0" min="0" inputmode="numeric">
+                <span class="wf-amount-yen">円</span>
+            </div>
+            <div class="wf-section-label">備考</div>
+            <div style="margin-bottom:14px;">
+                <input type="text" class="wf-note-input" id="wf-note" placeholder="内容メモ（任意）" maxlength="50" autocomplete="off">
+            </div>
+            <div class="wf-section-label">誰の分</div>
+            <div id="wf-member-chips" class="wf-chips"><span class="payer-no-participants">参加者を読み込み中…</span></div>
+            <button class="wf-add-btn" id="wf-add-btn">＋ 追加</button>
+        </div>
+        <div class="warikan-card">
+            <div class="warikan-label">📋 支払い履歴</div>
+            <div class="entry-list" id="entry-list"><div class="entry-empty">支払いを追加してください</div></div>
+        </div>
+        <div class="warikan-result">
+            <div class="result-label">合計 / 1人あたり</div>
+            <div><span class="result-num" id="per-person">0</span><span class="result-yen">円</span></div>
+            <div class="result-sub" id="result-sub"></div>
+        </div>
+        <div class="warikan-card">
+            <div class="warikan-label">━━ 精算 ━━</div>
+            <div class="settlement-filter-chips" id="settlement-filter-chips"></div>
+            <div class="settlement-list" id="settlement-list"><div class="settlement-empty">支払いを追加してください</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- 名前変更モーダル -->
+<div class="rename-modal hidden" id="rename-modal">
+    <div class="rename-modal-box">
+        <div class="icon">✏️</div>
+        <h2>名前を変更</h2>
+        <p>新しい名前を入力してください</p>
+        <input type="text" class="rename-input" id="rename-input" placeholder="新しい名前" maxlength="10" autocomplete="off" />
+        <button class="rename-submit-btn" id="rename-submit-btn">変更する</button>
+        <button class="rename-cancel-btn" id="rename-cancel-btn">キャンセル</button>
+    </div>
+</div>
+
+<!-- 名前入力モーダル -->
+<div class="name-modal hidden" id="name-modal">
+    <div class="name-modal-box">
+        <div class="icon">👤</div>
+        <h2>あなたの名前は？</h2>
+        <p>✋ボタンで欲しいものに挙手できます</p>
+        <input type="text" class="name-input" id="name-input" placeholder="名前を入力" maxlength="10" autocomplete="off" />
+        <button class="name-submit-btn" id="name-submit-btn">決定！</button>
+    </div>
+</div>
+
+<div class="hold-hint" id="hold-hint">長押しでチェック ✓</div>
+<div class="conn-status online" id="conn-status">● オンライン</div>
+
+</div><!-- /main-content -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    integrity="sha384-UOGhq3B1X7KSNbx/mDSvY1KNiMPyJLv7FLynxFxvuRK3sJGS8E5t9FJL6Gzfe8+"
+    crossorigin="anonymous"
+    onerror="document.body.innerHTML='<p style=padding:20px;color:red>リソースの読み込みに失敗しました。ページを再読み込みしてください。</p>'">
+</script>
+<script>
+const SUPABASE_URL      = 'https://akovhthopauhmlbcjjfw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrb3ZodGhvcGF1aG1sYmNqamZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MjgxMzgsImV4cCI6MjA5NDUwNDEzOH0.BZPdBmMm6kGbcwCavUFj5xGoQqaS5r3T9E7kjXWlqKI';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const CATEGORIES = ['食品', '飲み物', '野菜・果物', '日用品', 'その他'];
+const CAT_ICONS  = { '食品':'🍱', '飲み物':'🥤', '野菜・果物':'🥦', '日用品':'🧴', 'その他':'📦' };
+
+let items = [], participants = [], warikanEntries = [];
+let myName = localStorage.getItem('kaidashi_user_name') || '';
+let eventId = null, eventName = '';
+let wfSelectedPayer = '', wfSelectedMembers = [];
+let settlementFilterName = '__my__';
+
+function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ========== イベント初期化 ==========
+async function initEvent() {
+    const { data, error } = await sb.from('events').select('id,name').eq('event_code', EVENT_CODE).single();
+    if (error || !data) { document.getElementById('invalid-screen').classList.remove('hidden'); return; }
+    eventId = data.id; eventName = data.name;
+    document.title = `🛒 ${eventName} | カイダシ`;
+    document.getElementById('event-name-display').textContent = eventName;
+    saveRecentEvent(EVENT_CODE, eventName);
+    document.getElementById('main-content').classList.remove('hidden');
+    if (!myName) { showNameModal(); }
+    else { sb.from('participants').upsert({ name: myName, event_id: eventId }, { onConflict: 'event_id,name' }); }
+    sb.channel(`kaidashi-items-${EVENT_CODE}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `event_id=eq.${eventId}` }, () => load())
+        .subscribe(s => setConn(s === 'SUBSCRIBED'));
+    sb.channel(`kaidashi-people-${EVENT_CODE}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'participants', filter: `event_id=eq.${eventId}` }, () => loadParticipants())
+        .subscribe();
+    sb.channel(`kaidashi-warikan-${EVENT_CODE}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'warikan_entries', filter: `event_id=eq.${eventId}` }, () => loadWarikan())
+        .subscribe();
+    await Promise.all([load(), loadParticipants(), loadWarikan()]);
+}
+
+function saveRecentEvent(code, name) {
+    let r = []; try { r = JSON.parse(localStorage.getItem('kaidashi_recent') || '[]'); } catch {}
+    r = r.filter(e => e.code !== code); r.unshift({ code, name });
+    localStorage.setItem('kaidashi_recent', JSON.stringify(r.slice(0, 10)));
+}
+
+function shareEvent() {
+    const url = location.href;
+    if (navigator.share) { navigator.share({ title: `🛒 ${eventName} | カイダシ`, url }); }
+    else { navigator.clipboard.writeText(url).then(() => alert('URLをコピーしました！')); }
+}
+
+// ========== 名前モーダル ==========
+function showNameModal() { document.getElementById('name-modal').classList.remove('hidden'); setTimeout(() => document.getElementById('name-input').focus(), 100); }
+function hideNameModal() { document.getElementById('name-modal').classList.add('hidden'); }
+async function submitName() {
+    const val = document.getElementById('name-input').value.trim();
+    if (!val) return;
+    myName = val; localStorage.setItem('kaidashi_user_name', myName); hideNameModal();
+    await sb.from('participants').upsert({ name: myName, event_id: eventId }, { onConflict: 'event_id,name' });
+}
+document.getElementById('name-submit-btn').addEventListener('click', submitName);
+document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitName(); });
+
+// ========== データ読み込み ==========
+async function load() {
+    if (!eventId) return;
+    const { data, error } = await sb.from('items').select('*').eq('event_id', eventId).order('created_at', { ascending: true });
+    if (error) { setConn(false); return; }
+    items = data; render(); setConn(true);
+}
+async function loadParticipants() {
+    if (!eventId) return;
+    const { data } = await sb.from('participants').select('name').eq('event_id', eventId);
+    if (data) { participants = data.map(r => r.name); renderParticipants(); }
+}
+async function loadWarikan() {
+    if (!eventId) return;
+    const { data } = await sb.from('warikan_entries').select('*').eq('event_id', eventId).order('created_at', { ascending: true });
+    warikanEntries = data || []; renderWarikanUI();
+}
+
+function setConn(online) {
+    const el = document.getElementById('conn-status');
+    el.textContent = online ? '● オンライン' : '● オフライン';
+    el.className = 'conn-status ' + (online ? 'online' : 'offline');
+}
+
+// ========== 描画 ==========
+function render() {
+    const total = items.length, done = items.filter(i => i.checked).length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-done').textContent = done;
+    document.getElementById('stat-remaining').textContent = total - done;
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+    const container = document.getElementById('items-container');
+    if (!total) { container.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><p>まだ何も追加されていません！</p></div>'; return; }
+    const grouped = {};
+    items.forEach(item => { const c = item.category || 'その他'; (grouped[c] = grouped[c] || []).push(item); });
+    let html = '';
+    CATEGORIES.forEach(cat => {
+        const group = grouped[cat]; if (!group?.length) return;
+        html += `<div class="category-section"><div class="category-title">${CAT_ICONS[cat]} ${esc(cat)}</div>`;
+        group.forEach(item => {
+            const voters = item.voters || [], voted = voters.includes(myName);
+            const canDelete = item.added_by && item.added_by === myName;
+            const checkerHtml = item.checked && item.checked_by ? `<div class="checker">✓ ${esc(item.checked_by)}</div>` : '';
+            const votersHtml = buildVotersHtml(voters);
+            html += `<div class="item ${item.checked?'checked':''}" data-cat="${esc(item.category)}">
+                <div class="checkbox-wrap" onmousedown="startHold(event,'${esc(item.id)}',${item.checked})" ontouchstart="startHold(event,'${esc(item.id)}',${item.checked})" onmouseup="cancelHold(event)" onmouseleave="cancelHold(event)" ontouchend="cancelHold(event)" ontouchcancel="cancelHold(event)">
+                    <input type="checkbox" class="item-checkbox" ${item.checked?'checked':''} style="pointer-events:none;">
+                    <div class="hold-ring"></div>
+                </div>
+                <div class="item-info"><div class="item-name">${esc(item.name)}</div>${checkerHtml}${votersHtml}</div>
+                <button class="vote-btn ${voted?'voted':''}" onclick="voteItem('${esc(item.id)}')">✋${voters.length?' '+voters.length:''}</button>
+                ${canDelete?`<button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>`:''}
+            </div>`;
+        });
+        html += '</div>';
+    });
+    container.innerHTML = html;
+}
+
+function renderParticipants() {
+    document.getElementById('participant-count').textContent = participants.length;
+    const tagsEl = document.getElementById('participant-tags');
+    if (!participants.length) {
+        tagsEl.innerHTML = '<span class="no-participants">まだ誰もいません</span><button class="participant-add-btn" onclick="showParticipantAddForm()">＋ 追加</button>';
+    } else {
+        const tags = participants.map(n => n === myName
+            ? `<span class="participant-tag me" onclick="showRenameModal()" title="タップで名前変更">${esc(n)}（自分）</span>`
+            : `<span class="participant-tag">${esc(n)}<button class="participant-tag-remove" onclick="removeParticipant('${esc(n)}')">✕</button></span>`);
+        tags.push(`<button class="participant-add-btn" onclick="showParticipantAddForm()">＋ 追加</button>`);
+        tagsEl.innerHTML = tags.join('');
+    }
+    if (!document.getElementById('tab-warikan').classList.contains('hidden')) renderWarikanUI();
+}
+
+function buildVotersHtml(voters) {
+    if (!voters?.length) return '';
+    const MAX = 2, shortNames = voters.slice(0, MAX).join('・'), remaining = voters.length - MAX;
+    return remaining > 0
+        ? `<div class="voters-wrap"><span class="voters-short" onclick="toggleVoters(this)">✋ ${esc(shortNames)} <span class="voters-toggle-icon">他${remaining}人 ▼</span></span><span class="voters-full hidden" onclick="toggleVoters(this)">✋ ${esc(voters.join('・'))} <span class="voters-toggle-icon">▲</span></span></div>`
+        : `<div class="voters-wrap"><span class="voters-short">✋ ${esc(shortNames)}</span></div>`;
+}
+function toggleVoters(el) { const w = el.closest('.voters-wrap'); w.querySelector('.voters-short').classList.toggle('hidden'); w.querySelector('.voters-full').classList.toggle('hidden'); }
+
+// ========== アイテム操作 ==========
+const addBtn = document.getElementById('add-btn');
+async function addItem() {
+    if (!eventId) return;
+    const name = document.getElementById('item-name').value.trim();
+    const category = document.getElementById('item-category').value;
+    if (!name) { document.getElementById('item-name').focus(); return; }
+    addBtn.disabled = true;
+    try {
+        await sb.from('items').insert({ name, category, checked: false, added_by: myName || null, event_id: eventId });
+        document.getElementById('item-name').value = '';
+        document.getElementById('item-name').focus();
+    } finally { addBtn.disabled = false; }
+}
+addBtn.addEventListener('click', addItem);
+document.getElementById('item-name').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+
+async function toggleItem(id, checked) {
+    await sb.from('items').update({ checked, checked_by: checked ? (myName || null) : null }).eq('id', id).eq('event_id', eventId);
+}
+async function voteItem(id) {
+    if (!myName) { showNameModal(); return; }
+    const item = items.find(i => i.id === id); if (!item) return;
+    const voters = item.voters || [];
+    const newVoters = voters.includes(myName) ? voters.filter(v => v !== myName) : [...voters, myName];
+    await sb.from('items').update({ voters: newVoters }).eq('id', id).eq('event_id', eventId);
+}
+async function deleteItem(id) { if (confirm('このアイテムを削除しますか？')) await sb.from('items').delete().eq('id', id).eq('event_id', eventId); }
+
+let holdTimer = null, holdTarget = null;
+function showHoldHint() { const h = document.getElementById('hold-hint'); h.classList.add('show'); clearTimeout(window._hintTimer); window._hintTimer = setTimeout(() => h.classList.remove('show'), 1400); }
+function startHold(e, id, currentChecked) {
+    e.preventDefault(); if (holdTimer) clearTimeout(holdTimer);
+    holdTarget = e.currentTarget; holdTarget.classList.add('holding');
+    holdTimer = setTimeout(async () => {
+        holdTimer = null; holdTarget?.classList.remove('holding'); holdTarget = null;
+        if (currentChecked && !confirm('購入済みを未購入に戻しますか？')) return;
+        await toggleItem(id, !currentChecked);
+    }, 500);
+}
+function cancelHold(e) {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; showHoldHint(); }
+    if (holdTarget) { holdTarget.classList.remove('holding'); holdTarget = null; }
+}
+
+// ========== タブ ==========
+function switchTab(tab) {
+    ['list','warikan'].forEach(t => { document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab); document.getElementById(`tab-btn-${t}`).classList.toggle('active', t === tab); });
+    if (tab === 'warikan') renderWarikanUI();
+}
+
+// ========== 割り勘 ==========
+function selectWfPayer(name) { wfSelectedPayer = name; document.querySelectorAll('#wf-payer-chips .wf-chip').forEach(c => c.classList.toggle('selected', c.dataset.name === name)); }
+function toggleWfMember(name) {
+    wfSelectedMembers = wfSelectedMembers.includes(name) ? wfSelectedMembers.filter(n => n !== name) : [...wfSelectedMembers, name];
+    document.querySelectorAll('#wf-member-chips .wf-chip').forEach(c => c.classList.toggle('selected', wfSelectedMembers.includes(c.dataset.name)));
+}
+function renderWfPayerChips() {
+    const wrap = document.getElementById('wf-payer-chips'); if (!wrap) return;
+    if (!participants.length) { wrap.innerHTML = '<span class="payer-no-participants">参加者がいません。</span>'; return; }
+    if (!wfSelectedPayer || !participants.includes(wfSelectedPayer)) wfSelectedPayer = participants.includes(myName) ? myName : participants[0];
+    wrap.innerHTML = participants.map(n => `<button class="wf-chip ${n===myName?'me-chip':''} ${n===wfSelectedPayer?'selected':''}" data-name="${esc(n)}" onclick="selectWfPayer('${esc(n)}')">${esc(n)}</button>`).join('');
+}
+function renderWfMemberChips() {
+    const wrap = document.getElementById('wf-member-chips'); if (!wrap) return;
+    if (!participants.length) { wrap.innerHTML = '<span class="payer-no-participants">参加者がいません。</span>'; return; }
+    if (!wfSelectedMembers.length) wfSelectedMembers = [...participants];
+    wrap.innerHTML = participants.map(n => `<button class="wf-chip ${n===myName?'me-chip':''} ${wfSelectedMembers.includes(n)?'selected':''}" data-name="${esc(n)}" onclick="toggleWfMember('${esc(n)}')">${esc(n)}</button>`).join('');
+}
+function renderEntryList() {
+    const listEl = document.getElementById('entry-list'); if (!listEl) return;
+    if (!warikanEntries.length) { listEl.innerHTML = '<div class="entry-empty">支払いを追加してください</div>'; return; }
+    listEl.innerHTML = [...warikanEntries].sort((a,b) => new Date(b.created_at)-new Date(a.created_at)).map(entry => {
+        const mc = entry.members.length;
+        const ml = mc === participants.length && participants.length > 0 ? `全員 の${mc}人分` : `${entry.members.map(m=>esc(m)).join('・')} の${mc}人分`;
+        return `<div class="entry-row"><span class="entry-icon">💳</span><div class="entry-info"><div class="entry-main"><span class="entry-payer">${esc(entry.payer)}</span> が <span class="entry-amount">${Number(entry.amount).toLocaleString()}円</span> 払った</div>${entry.note?`<div class="entry-note">💬 ${esc(entry.note)}</div>`:''}<div class="entry-members">（${ml}）</div></div><button class="entry-delete-btn" onclick="deleteWarikanEntry('${esc(entry.id)}')">✕</button></div>`;
+    }).join('');
+}
+async function addWarikanEntry() {
+    if (!eventId) return;
+    const amount = parseInt(document.getElementById('wf-amount').value) || 0;
+    const note = document.getElementById('wf-note').value.trim();
+    if (!wfSelectedPayer) { alert('払った人を選んでください'); return; }
+    if (amount <= 0) { alert('金額を入力してください'); document.getElementById('wf-amount').focus(); return; }
+    if (!wfSelectedMembers.length) { alert('誰の分か選んでください'); return; }
+    const btn = document.getElementById('wf-add-btn'); btn.disabled = true;
+    const insertData = { payer: wfSelectedPayer, amount, members: [...wfSelectedMembers], event_id: eventId };
+    if (note) insertData.note = note;
+    const { error } = await sb.from('warikan_entries').insert(insertData);
+    if (error) { alert('追加に失敗しました'); btn.disabled = false; return; }
+    document.getElementById('wf-amount').value = ''; document.getElementById('wf-note').value = '';
+    wfSelectedMembers = [...participants]; renderWfMemberChips(); btn.disabled = false;
+    await loadWarikan();
+}
+async function deleteWarikanEntry(id) {
+    if (!confirm('この支払い記録を削除しますか？')) return;
+    await sb.from('warikan_entries').delete().eq('id', id).eq('event_id', eventId);
+    await loadWarikan();
+}
+function renderWarikanUI() { renderWfPayerChips(); renderWfMemberChips(); renderEntryList(); calcSettlement(); }
+
+function renderSettlementFilterChips() {
+    const wrap = document.getElementById('settlement-filter-chips'); if (!wrap) return;
+    if (settlementFilterName === '__my__') settlementFilterName = participants.includes(myName) ? myName : 'all';
+    if (!participants.length) { wrap.innerHTML = ''; return; }
+    const chips = [`<button class="settlement-filter-chip all-chip ${settlementFilterName==='all'?'selected':''}" onclick="selectSettlementFilter('all')">全員</button>`];
+    participants.forEach(n => chips.push(`<button class="settlement-filter-chip ${n===myName?'me-chip':''} ${settlementFilterName===n?'selected':''}" onclick="selectSettlementFilter('${esc(n)}')">${esc(n)}</button>`));
+    wrap.innerHTML = chips.join('');
+}
+function selectSettlementFilter(name) { settlementFilterName = name; renderSettlementFilterChips(); calcSettlement(); }
+
+function calcSettlement() {
+    const listEl = document.getElementById('settlement-list'), perEl = document.getElementById('per-person'), subEl = document.getElementById('result-sub');
+    if (!warikanEntries.length) { if (perEl) perEl.textContent='0'; if (subEl) subEl.textContent=''; renderSettlementFilterChips(); if (listEl) listEl.innerHTML='<div class="settlement-empty">支払いを追加してください</div>'; return; }
+    const allNames = new Set(); warikanEntries.forEach(e => { allNames.add(e.payer); e.members.forEach(m => allNames.add(m)); });
+    const balanceMap = {}; allNames.forEach(n => { balanceMap[n] = 0; });
+    let grandTotal = 0;
+    warikanEntries.forEach(entry => {
+        const share = entry.amount / entry.members.length;
+        balanceMap[entry.payer] = (balanceMap[entry.payer] || 0) + entry.amount;
+        entry.members.forEach(m => { balanceMap[m] = (balanceMap[m] || 0) - share; });
+        grandTotal += entry.amount;
+    });
+    const count = participants.length || allNames.size;
+    if (perEl) perEl.textContent = (count > 0 ? Math.round(grandTotal / count) : 0).toLocaleString();
+    if (subEl) subEl.textContent = `合計 ${grandTotal.toLocaleString()}円 ÷ ${count}人`;
+    const creditors = Object.entries(balanceMap).filter(([,b]) => b > 0.5).map(([n,b]) => ({name:n,balance:b}));
+    const debtors   = Object.entries(balanceMap).filter(([,b]) => b < -0.5).map(([n,b]) => ({name:n,balance:b}));
+    renderSettlementFilterChips();
+    if (!creditors.length || !debtors.length) { if (listEl) listEl.innerHTML='<div class="settlement-empty">精算不要です🎉</div>'; return; }
+    const transactions = []; let ci=0, di=0;
+    while (ci < creditors.length && di < debtors.length) {
+        const c = creditors[ci], d = debtors[di], amount = Math.min(c.balance, -d.balance);
+        if (amount >= 1) transactions.push({ from: d.name, to: c.name, amount: Math.round(amount) });
+        c.balance -= amount; d.balance += amount;
+        if (c.balance < 0.5) ci++; if (d.balance > -0.5) di++;
+    }
+    const filtered = settlementFilterName === 'all' ? transactions : transactions.filter(t => t.from === settlementFilterName);
+    if (!filtered.length) { if (listEl) listEl.innerHTML='<div class="settlement-empty">精算不要です🎉</div>'; return; }
+    if (listEl) listEl.innerHTML = filtered.map(t => `<div class="settlement-row"><span class="settlement-avatar">🙋</span><div class="settlement-info"><div class="settlement-name">${esc(t.from)}</div><div class="settlement-arrow">→ <span class="settlement-payer-name">${esc(t.to)}</span> に支払う</div></div><div><span class="settlement-amount">${t.amount.toLocaleString()}</span><span class="settlement-yen">円</span></div></div>`).join('');
+}
+
+document.getElementById('wf-add-btn').addEventListener('click', addWarikanEntry);
+document.getElementById('wf-amount').addEventListener('keydown', e => { if (e.key === 'Enter') addWarikanEntry(); });
+
+// ========== 参加者管理 ==========
+function showParticipantAddForm() { document.getElementById('participant-add-form').classList.remove('hidden'); const i = document.getElementById('participant-name-input'); i.value=''; setTimeout(()=>i.focus(),50); }
+function hideParticipantAddForm() { document.getElementById('participant-add-form').classList.add('hidden'); document.getElementById('participant-name-input').value=''; }
+async function confirmAddParticipant() {
+    if (!eventId) return;
+    const input = document.getElementById('participant-name-input'), name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    if (participants.includes(name)) { alert('その名前はすでに登録されています'); input.focus(); return; }
+    await sb.from('participants').upsert({ name, event_id: eventId }, { onConflict: 'event_id,name' });
+    hideParticipantAddForm();
+}
+document.getElementById('participant-name-confirm').addEventListener('click', confirmAddParticipant);
+document.getElementById('participant-name-cancel').addEventListener('click', hideParticipantAddForm);
+document.getElementById('participant-name-input').addEventListener('keydown', e => { if (e.key==='Enter') confirmAddParticipant(); if (e.key==='Escape') hideParticipantAddForm(); });
+
+async function removeParticipant(name) {
+    if (!eventId || !confirm(`「${name}」を参加者から削除しますか？`)) return;
+    const { data: cur } = await sb.from('warikan_entries').select('*').eq('event_id', eventId);
+    const entries = cur || [];
+    for (const e of entries.filter(e => e.payer === name)) await sb.from('warikan_entries').delete().eq('id', e.id);
+    for (const e of entries.filter(e => e.payer !== name && e.members.includes(name))) {
+        const newM = e.members.filter(m => m !== name);
+        if (!newM.length) await sb.from('warikan_entries').delete().eq('id', e.id);
+        else await sb.from('warikan_entries').update({ members: newM }).eq('id', e.id);
+    }
+    await sb.from('participants').delete().eq('name', name).eq('event_id', eventId);
+}
+
+function showRenameModal() { const i = document.getElementById('rename-input'); i.value = myName; document.getElementById('rename-modal').classList.remove('hidden'); setTimeout(() => { i.focus(); i.select(); }, 100); }
+function hideRenameModal() { document.getElementById('rename-modal').classList.add('hidden'); }
+async function submitRename() {
+    if (!eventId) return;
+    const input = document.getElementById('rename-input'), newName = input.value.trim();
+    if (!newName) { input.focus(); return; }
+    if (newName === myName) { hideRenameModal(); return; }
+    if (participants.includes(newName)) { alert('その名前はすでに使われています'); input.focus(); return; }
+    const oldName = myName; myName = newName; localStorage.setItem('kaidashi_user_name', myName); hideRenameModal();
+    await sb.from('participants').delete().eq('name', oldName).eq('event_id', eventId);
+    await sb.from('participants').upsert({ name: newName, event_id: eventId }, { onConflict: 'event_id,name' });
+    participants = participants.map(n => n === oldName ? newName : n); renderParticipants();
+}
+document.getElementById('rename-submit-btn').addEventListener('click', submitRename);
+document.getElementById('rename-cancel-btn').addEventListener('click', hideRenameModal);
+document.getElementById('rename-input').addEventListener('keydown', e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') hideRenameModal(); });
+
+initEvent();
+</script>
+</body>
+</html>
