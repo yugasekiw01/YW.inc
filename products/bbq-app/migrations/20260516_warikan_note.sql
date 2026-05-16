@@ -1,0 +1,1 @@
+ALTER TABLE warikan_entries ADD COLUMN IF NOT EXISTS note TEXT;

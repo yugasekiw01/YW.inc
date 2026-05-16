@@ -634,6 +634,24 @@
         .wf-add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,107,0.5); }
         .wf-add-btn:active { transform: scale(0.97); }
         .wf-add-btn:disabled { background: linear-gradient(135deg, #FFB3B3, #FFCC99); box-shadow: none; cursor: default; transform: none; }
+        .wf-note-input {
+            width: 100%;
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 10px 14px;
+            border: 2px solid #FFE0CC;
+            border-radius: 12px;
+            font-family: inherit;
+            outline: none;
+            background: #FFFAF7;
+        }
+        .wf-note-input:focus { border-color: #FF6B6B; box-shadow: 0 0 0 3px rgba(255,107,107,0.15); background: white; }
+        .entry-note {
+            font-size: 0.78rem;
+            color: #FF9F43;
+            font-weight: 700;
+            margin-top: 3px;
+        }
         .payer-no-participants {
             font-size: 0.85rem;
             color: #CCC;
@@ -1000,6 +1018,13 @@
                 <input type="number" class="wf-amount-input" id="wf-amount"
                     placeholder="0" min="0" inputmode="numeric">
                 <span class="wf-amount-yen">円</span>
+            </div>
+
+            <!-- 備考 -->
+            <div class="wf-section-label">備考</div>
+            <div style="margin-bottom:14px;">
+                <input type="text" class="wf-note-input" id="wf-note"
+                    placeholder="肉代・飲み物代など（任意）" maxlength="50" autocomplete="off">
             </div>
 
             <!-- 誰の分 -->
@@ -1486,6 +1511,9 @@ function renderEntryList() {
         const memberLabel = memberCount === participants.length && participants.length > 0
             ? `全員 の${memberCount}人分`
             : `${entry.members.map(m => esc(m)).join('・')} の${memberCount}人分`;
+        const noteHtml = entry.note
+            ? `<div class="entry-note">💬 ${esc(entry.note)}</div>`
+            : '';
         return `
         <div class="entry-row">
             <span class="entry-icon">💳</span>
@@ -1494,6 +1522,7 @@ function renderEntryList() {
                     <span class="entry-payer">${esc(entry.payer)}</span> が
                     <span class="entry-amount">${Number(entry.amount).toLocaleString()}円</span> 払った
                 </div>
+                ${noteHtml}
                 <div class="entry-members">（${memberLabel}）</div>
             </div>
             <button class="entry-delete-btn" onclick="deleteWarikanEntry('${esc(entry.id)}')">✕</button>
@@ -1504,7 +1533,9 @@ function renderEntryList() {
 // 支払いエントリーを追加
 async function addWarikanEntry() {
     const amountInput = document.getElementById('wf-amount');
+    const noteInput   = document.getElementById('wf-note');
     const amount = parseInt(amountInput.value) || 0;
+    const note   = noteInput ? noteInput.value.trim() : '';
 
     if (!wfSelectedPayer) {
         alert('払った人を選んでください');
@@ -1523,11 +1554,14 @@ async function addWarikanEntry() {
     const btn = document.getElementById('wf-add-btn');
     btn.disabled = true;
 
-    const { error } = await sb.from(TABLE_WARIKAN).insert({
+    const insertData = {
         payer: wfSelectedPayer,
         amount,
         members: [...wfSelectedMembers]
-    });
+    };
+    if (note) insertData.note = note;
+
+    const { error } = await sb.from(TABLE_WARIKAN).insert(insertData);
 
     if (error) {
         console.error('addWarikanEntry error:', error);
@@ -1538,6 +1572,7 @@ async function addWarikanEntry() {
 
     // フォームリセット
     amountInput.value = '';
+    if (noteInput) noteInput.value = '';
     // 誰の分は全員に戻す
     wfSelectedMembers = [...participants];
     renderWfMemberChips();
