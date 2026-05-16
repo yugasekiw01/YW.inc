@@ -460,6 +460,61 @@
             margin-left: 4px;
         }
 
+        /* ---- 長押しチェック アニメーション ---- */
+        .item-checkbox {
+            position: relative;
+        }
+        .checkbox-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background 0.15s;
+        }
+        .checkbox-wrap:active { background: rgba(255,107,107,0.12); }
+        .hold-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            pointer-events: none;
+        }
+        .checkbox-wrap.holding .hold-ring {
+            border-color: #FF6B6B;
+            animation: fillRing 0.5s linear forwards;
+        }
+        @keyframes fillRing {
+            0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
+            100% { clip-path: inset(0 0% 0 0);   opacity: 1; }
+        }
+        /* 長押しヒントトースト */
+        .hold-hint {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(0,0,0,0.72);
+            color: white;
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 8px 18px;
+            border-radius: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 200;
+            white-space: nowrap;
+        }
+        .hold-hint.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         /* ---- 読み込み中 ---- */
         .loading {
             text-align: center;
@@ -590,6 +645,7 @@
     </div>
 </div>
 
+<div class="hold-hint" id="hold-hint">長押しでチェック ✓</div>
 <div class="conn-status online" id="conn-status">● オンライン</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -735,11 +791,23 @@ function render() {
             const voters  = item.voters || [];
             const voted   = voters.includes(myName);
             const voterTxt = voters.length ? voters.join('・') : '';
+            const canDelete = item.added_by && item.added_by === myName;
             html += `
             <div class="item ${item.checked ? 'checked' : ''}" data-cat="${esc(item.category)}">
-                <input type="checkbox" class="item-checkbox"
-                    ${item.checked ? 'checked' : ''}
-                    onchange="toggleItem('${esc(item.id)}', this.checked)">
+                <div class="checkbox-wrap"
+                    data-id="${esc(item.id)}"
+                    data-checked="${item.checked ? '1' : '0'}"
+                    onmousedown="startHold(event, '${esc(item.id)}', ${item.checked})"
+                    ontouchstart="startHold(event, '${esc(item.id)}', ${item.checked})"
+                    onmouseup="cancelHold(event)"
+                    onmouseleave="cancelHold(event)"
+                    ontouchend="cancelHold(event)"
+                    ontouchcancel="cancelHold(event)">
+                    <input type="checkbox" class="item-checkbox"
+                        ${item.checked ? 'checked' : ''}
+                        style="pointer-events:none;">
+                    <div class="hold-ring"></div>
+                </div>
                 <div class="item-info">
                     <div class="item-name">${esc(item.name)}</div>
                     ${voterTxt ? `<div class="voters">✋ ${esc(voterTxt)}</div>` : ''}
@@ -747,7 +815,7 @@ function render() {
                 <button class="vote-btn ${voted ? 'voted' : ''}" onclick="voteItem('${esc(item.id)}')">
                     ✋${voters.length ? ' ' + voters.length : ''}
                 </button>
-                <button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>
+                ${canDelete ? `<button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>` : ''}
             </div>`;
         });
         html += '</div>';
@@ -764,7 +832,7 @@ async function addItem() {
 
     addBtn.disabled = true;
     try {
-        await sb.from(TABLE).insert({ name, category, checked: false });
+        await sb.from(TABLE).insert({ name, category, checked: false, added_by: myName || null });
         document.getElementById('item-name').value = '';
         document.getElementById('item-name').focus();
     } finally {
@@ -779,6 +847,49 @@ document.getElementById('item-name').addEventListener('keydown', e => {
 
 async function toggleItem(id, checked) {
     await sb.from(TABLE).update({ checked }).eq('id', id);
+}
+
+// ---- 長押しチェック ----
+let holdTimer  = null;
+let holdTarget = null;
+
+function showHoldHint() {
+    const hint = document.getElementById('hold-hint');
+    hint.classList.add('show');
+    clearTimeout(window._hintTimer);
+    window._hintTimer = setTimeout(() => hint.classList.remove('show'), 1400);
+}
+
+function startHold(e, id, currentChecked) {
+    e.preventDefault();
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTarget = e.currentTarget;
+    holdTarget.classList.add('holding');
+
+    holdTimer = setTimeout(async () => {
+        holdTimer = null;
+        holdTarget && holdTarget.classList.remove('holding');
+        holdTarget = null;
+
+        const newChecked = !currentChecked;
+        // チェック済み → アンチェックは confirm
+        if (currentChecked) {
+            if (!confirm('購入済みを未購入に戻しますか？')) return;
+        }
+        await toggleItem(id, newChecked);
+    }, 500);
+}
+
+function cancelHold(e) {
+    if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+        showHoldHint();
+    }
+    if (holdTarget) {
+        holdTarget.classList.remove('holding');
+        holdTarget = null;
+    }
 }
 
 async function voteItem(id) {
