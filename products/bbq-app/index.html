@@ -1119,12 +1119,21 @@ let _isOwnSave    = false;
 // forceLoad=true のときは _isOwnSave を無視して強制読み込み（ページロード時用）
 async function loadAmountEntries(forceLoad = false) {
     if (!forceLoad && _isOwnSave) return;
+
+    // まずlocalStorageから即反映（ちらつき防止）
+    const local = localStorage.getItem('bbq_total_amount');
+    const el = document.getElementById('total-amount');
+    if (local != null && el && !el._userEditing) {
+        el.value = local;
+        calcSettlement();
+    }
+
+    // Supabaseからも読み込んで上書き
     const { data } = await sb.from(TABLE_CONFIG)
         .select('value').eq('key', 'total_amount').maybeSingle();
-    // data.value が "0" や空文字でも正しく反映する（null/undefined のみ除外）
     if (data && data.value != null) {
-        const el = document.getElementById('total-amount');
         if (el && !el._userEditing) el.value = data.value;
+        localStorage.setItem('bbq_total_amount', data.value);
     }
     calcSettlement();
 }
@@ -1132,10 +1141,11 @@ async function loadAmountEntries(forceLoad = false) {
 // 合計金額をSupabaseに保存
 async function saveTotalAmount(amount) {
     _isOwnSave = true;
-    await sb.from(TABLE_CONFIG).upsert({
-        key: 'total_amount',
-        value: String(amount)
-    });
+    localStorage.setItem('bbq_total_amount', String(amount));
+    await sb.from(TABLE_CONFIG).upsert(
+        { key: 'total_amount', value: String(amount) },
+        { onConflict: 'key' }
+    );
     setTimeout(() => { _isOwnSave = false; }, 1200);
 }
 
