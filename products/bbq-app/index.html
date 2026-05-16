@@ -1072,10 +1072,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const TABLE        = 'bbq_items';
-const TABLE_PEOPLE = 'participants';
-const TABLE_CONFIG = 'bbq_config';
-const CATEGORIES   = ['肉', '野菜・果物', '飲み物', '炭水化物', '調味料・その他'];
+const TABLE          = 'bbq_items';
+const TABLE_PEOPLE   = 'participants';
+const TABLE_CONFIG   = 'bbq_config';
+const TABLE_WARIKAN  = 'warikan_entries';
+const CATEGORIES     = ['肉', '野菜・果物', '飲み物', '炭水化物', '調味料・その他'];
 const CAT_ICONS    = { '肉':'🥩', '野菜・果物':'🥦', '飲み物':'🍺', '炭水化物':'🍞', '調味料・その他':'🧂' };
 
 let items        = [];
@@ -1146,13 +1147,13 @@ sb.channel('participants-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_PEOPLE }, () => loadParticipants())
     .subscribe();
 
-sb.channel('config-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_CONFIG }, () => loadAmountEntries())
+sb.channel('warikan-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_WARIKAN }, () => loadAmountEntries())
     .subscribe();
 
 load();
 loadParticipants();
-loadAmountEntries(true); // ページロード時は強制読み込み
+loadAmountEntries();
 
 // ========== 接続ステータス ==========
 function setConn(online) {
@@ -1396,40 +1397,20 @@ function switchTab(tab) {
 // warikanEntries: 支払い記録の配列
 // { id, payer, amount, members, created_at }
 let warikanEntries = [];
-let _isOwnWariSave = false;
 
 // フォーム状態
 let wfSelectedPayer = '';   // 払った人
 let wfSelectedMembers = []; // 誰の分（複数）
 
-// Supabaseからwarikan_entriesを読み込む
-async function loadAmountEntries(forceLoad = false) {
-    if (!forceLoad && _isOwnWariSave) return;
-
-    const { data, error } = await sb.from(TABLE_CONFIG).select('key, value').eq('key', 'warikan_entries');
+// Supabaseのwarikan_entriesテーブルから読み込む
+async function loadAmountEntries() {
+    const { data, error } = await sb
+        .from(TABLE_WARIKAN)
+        .select('*')
+        .order('created_at', { ascending: true });
     if (error) { console.error('loadWarikanEntries error:', error); return; }
-
-    if (data && data.length > 0) {
-        try {
-            warikanEntries = JSON.parse(data[0].value) || [];
-        } catch(e) {
-            warikanEntries = [];
-        }
-    } else {
-        warikanEntries = [];
-    }
-
+    warikanEntries = data || [];
     renderWarikanUI();
-}
-
-// warikan_entriesをSupabaseに保存
-async function saveWarikanEntries() {
-    _isOwnWariSave = true;
-    await sb.from(TABLE_CONFIG).upsert(
-        { key: 'warikan_entries', value: JSON.stringify(warikanEntries) },
-        { onConflict: 'key' }
-    );
-    setTimeout(() => { _isOwnWariSave = false; }, 1200);
 }
 
 // 払った人チップを選択
@@ -1542,34 +1523,40 @@ async function addWarikanEntry() {
     const btn = document.getElementById('wf-add-btn');
     btn.disabled = true;
 
-    const entry = {
-        id: crypto.randomUUID(),
+    const { error } = await sb.from(TABLE_WARIKAN).insert({
         payer: wfSelectedPayer,
         amount,
-        members: [...wfSelectedMembers],
-        created_at: new Date().toISOString()
-    };
-    warikanEntries.push(entry);
-    await saveWarikanEntries();
+        members: [...wfSelectedMembers]
+    });
+
+    if (error) {
+        console.error('addWarikanEntry error:', error);
+        alert('支払いの追加に失敗しました');
+        btn.disabled = false;
+        return;
+    }
 
     // フォームリセット
     amountInput.value = '';
     // 誰の分は全員に戻す
     wfSelectedMembers = [...participants];
     renderWfMemberChips();
-
-    renderEntryList();
-    calcSettlement();
     btn.disabled = false;
+    // リアルタイムで更新されるが、念のため手動ロード
+    await loadAmountEntries();
 }
 
 // 支払いエントリーを削除
 async function deleteWarikanEntry(id) {
     if (!confirm('この支払い記録を削除しますか？')) return;
-    warikanEntries = warikanEntries.filter(e => e.id !== id);
-    await saveWarikanEntries();
-    renderEntryList();
-    calcSettlement();
+    const { error } = await sb.from(TABLE_WARIKAN).delete().eq('id', id);
+    if (error) {
+        console.error('deleteWarikanEntry error:', error);
+        alert('削除に失敗しました');
+        return;
+    }
+    // リアルタイムで更新されるが、念のため手動ロード
+    await loadAmountEntries();
 }
 
 // 割り勘タブ全体を描画
@@ -1764,31 +1751,26 @@ document.getElementById('participant-name-input').addEventListener('keydown', e 
 async function removeParticipant(name) {
     if (!confirm(`「${name}」を参加者から削除しますか？`)) return;
 
-    // 割り勘履歴から削除対象者を除外する
-    // 最新データをSupabaseから取得
-    const { data: configData } = await sb.from(TABLE_CONFIG).select('key, value').eq('key', 'warikan_entries');
-    let currentEntries = [];
-    if (configData && configData.length > 0) {
-        try { currentEntries = JSON.parse(configData[0].value) || []; } catch(e) { currentEntries = []; }
+    // 割り勘履歴から削除対象者を除外する（専用テーブル操作）
+    // 最新データを取得
+    const { data: currentData } = await sb.from(TABLE_WARIKAN).select('*').order('created_at', { ascending: true });
+    const currentEntries = currentData || [];
+
+    // payer が削除対象のエントリーをDELETE
+    const payerEntries = currentEntries.filter(e => e.payer === name);
+    for (const entry of payerEntries) {
+        await sb.from(TABLE_WARIKAN).delete().eq('id', entry.id);
     }
 
-    const updatedEntries = currentEntries
-        // payer が削除対象の場合はエントリーごと削除
-        .filter(entry => entry.payer !== name)
-        // members から削除対象を除去し、members が空になったエントリーも削除
-        .map(entry => ({ ...entry, members: entry.members.filter(m => m !== name) }))
-        .filter(entry => entry.members.length > 0);
-
-    // warikan_entries に変更があった場合のみ保存
-    if (updatedEntries.length !== currentEntries.length ||
-        JSON.stringify(updatedEntries) !== JSON.stringify(currentEntries)) {
-        warikanEntries = updatedEntries;
-        _isOwnWariSave = true;
-        await sb.from(TABLE_CONFIG).upsert(
-            { key: 'warikan_entries', value: JSON.stringify(warikanEntries) },
-            { onConflict: 'key' }
-        );
-        setTimeout(() => { _isOwnWariSave = false; }, 1200);
+    // members に削除対象が含まれるエントリーをUPDATE（空になったらDELETE）
+    const memberEntries = currentEntries.filter(e => e.payer !== name && e.members.includes(name));
+    for (const entry of memberEntries) {
+        const newMembers = entry.members.filter(m => m !== name);
+        if (newMembers.length === 0) {
+            await sb.from(TABLE_WARIKAN).delete().eq('id', entry.id);
+        } else {
+            await sb.from(TABLE_WARIKAN).update({ members: newMembers }).eq('id', entry.id);
+        }
     }
 
     await sb.from(TABLE_PEOPLE).delete().eq('name', name);
