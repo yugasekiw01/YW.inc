@@ -216,13 +216,13 @@
         .item:active { transform: scale(0.99); }
 
         /* カテゴリ別の左ボーダー色 */
-        .item[data-cat="肉"]       { border-left-color: #FF6B6B; }
+        .item[data-cat="肉"]         { border-left-color: #FF6B6B; }
         .item[data-cat="野菜・果物"] { border-left-color: #51CF66; }
-        .item[data-cat="飲み物"]    { border-left-color: #339AF0; }
-        .item[data-cat="炭水化物"]  { border-left-color: #FCC419; }
+        .item[data-cat="飲み物"]     { border-left-color: #339AF0; }
+        .item[data-cat="炭水化物"]   { border-left-color: #FCC419; }
         .item[data-cat="調味料・その他"] { border-left-color: #CC5DE8; }
 
-        .item.checked { opacity: 0.4; }
+        .item.checked { opacity: 0.45; }
         .item.checked .item-name { text-decoration: line-through; }
 
         .item-checkbox {
@@ -233,14 +233,48 @@
             flex-shrink: 0;
         }
         .item-name {
-            flex: 1;
             font-size: 1rem;
             font-weight: 700;
-            min-width: 0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        /* ---- チェック者 ---- */
+        .checker {
+            font-size: 0.72rem;
+            color: #4CAF50;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* ---- 挙手者 ---- */
+        .voters-wrap {
+            margin-top: 3px;
+        }
+        .voters-short, .voters-full {
+            font-size: 0.75rem;
+            color: #FF9F43;
+            font-weight: 700;
+            cursor: pointer;
+            display: block;
+            line-height: 1.5;
+        }
+        .voters-short {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .voters-full {
+            white-space: normal;
+            word-break: break-all;
+        }
+        .voters-toggle-icon {
+            font-size: 0.65rem;
+            opacity: 0.75;
+        }
+        .hidden { display: none !important; }
+
         .delete-btn {
             background: #FFF0F0;
             border: none;
@@ -273,17 +307,7 @@
         .vote-btn:hover  { background: #FFE8CC; border-color: #FF9F43; }
         .vote-btn.voted  { background: #FF9F43; border-color: #FF9F43; color: white; }
 
-        /* ---- 挙手者リスト ---- */
         .item-info { flex: 1; min-width: 0; }
-        .voters {
-            font-size: 0.75rem;
-            color: #FF9F43;
-            font-weight: 700;
-            margin-top: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
 
         /* ---- 名前入力モーダル ---- */
         .name-modal {
@@ -388,25 +412,114 @@
             color: #AAA;
             margin-bottom: 12px;
         }
-        .amount-row {
+
+        /* ---- 割り勘・金額追加 ---- */
+        .amount-add-row {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
-        .amount-row input {
+        .amount-add-input {
             flex: 1;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 800;
             text-align: right;
+            padding: 12px 14px;
             border: 2px solid #FFE0CC;
             border-radius: 12px;
-            padding: 12px 14px;
             font-family: inherit;
             outline: none;
             background: #FFFAF7;
+            min-width: 0;
         }
-        .amount-row input:focus { border-color: #FF6B6B; background: white; }
-        .amount-row .yen { font-size: 1.2rem; font-weight: 800; color: #AAA; }
+        .amount-add-input:focus { border-color: #FF6B6B; background: white; }
+        .amount-yen {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #AAA;
+            align-self: center;
+            flex-shrink: 0;
+        }
+        .amount-add-btn {
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 1rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.12s;
+        }
+        .amount-add-btn:active { transform: scale(0.95); }
+
+        /* 追加履歴リスト */
+        .amount-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .amount-entry {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #FFFAF7;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        .amount-entry-who {
+            font-weight: 800;
+            color: #FF9F43;
+            flex-shrink: 0;
+        }
+        .amount-entry-val {
+            flex: 1;
+            font-weight: 800;
+            color: #333;
+            text-align: right;
+        }
+        .amount-entry-del {
+            background: none;
+            border: none;
+            color: #FFAAAA;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            transition: color 0.15s;
+        }
+        .amount-entry-del:hover { color: #FF4444; }
+        .amount-empty {
+            text-align: center;
+            color: #DDD;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 12px 0;
+        }
+        .entries-divider {
+            border: none;
+            border-top: 2px dashed #FFE0CC;
+            margin: 4px 0 10px;
+        }
+        .entries-total-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            font-weight: 800;
+        }
+        .entries-total-row .total-label { color: #AAA; font-size: 0.82rem; margin-right: auto; }
+        .entries-total-num { font-size: 1.3rem; color: #FF6B6B; }
+        .entry-yen { font-size: 0.85rem; font-weight: 800; color: #AAA; flex-shrink: 0; }
+
         .spinner-row {
             display: flex;
             align-items: center;
@@ -461,9 +574,6 @@
         }
 
         /* ---- 長押しチェック アニメーション ---- */
-        .item-checkbox {
-            position: relative;
-        }
         .checkbox-wrap {
             position: relative;
             display: flex;
@@ -492,6 +602,7 @@
             0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
             100% { clip-path: inset(0 0% 0 0);   opacity: 1; }
         }
+
         /* 長押しヒントトースト */
         .hold-hint {
             position: fixed;
@@ -612,13 +723,26 @@
 
 <div id="tab-warikan" class="tab-panel hidden">
     <div class="warikan-wrap">
+
+        <!-- 購入金額追加 -->
         <div class="warikan-card">
-            <div class="warikan-label">💴 合計金額</div>
-            <div class="amount-row">
-                <input type="number" id="total-amount" placeholder="0" min="0" inputmode="numeric">
-                <span class="yen">円</span>
+            <div class="warikan-label">💴 支払い金額を追加</div>
+            <div class="amount-add-row">
+                <input type="number" class="amount-add-input" id="new-amount"
+                    placeholder="0" min="0" inputmode="numeric">
+                <span class="amount-yen">円</span>
+                <button class="amount-add-btn" onclick="addEntry()">追加</button>
+            </div>
+            <div class="amount-list" id="amount-entries"></div>
+            <hr class="entries-divider">
+            <div class="entries-total-row">
+                <span class="total-label">合計</span>
+                <span class="entries-total-num" id="entries-total">0</span>
+                <span class="entry-yen">円</span>
             </div>
         </div>
+
+        <!-- 人数 -->
         <div class="warikan-card">
             <div class="warikan-label">👥 割り勘人数</div>
             <div class="spinner-row">
@@ -627,10 +751,13 @@
                 <button class="spin-btn" id="people-plus">＋</button>
             </div>
         </div>
+
+        <!-- 結果 -->
         <div class="warikan-result">
             <div class="result-label">1人あたり</div>
             <div><span class="result-num" id="per-person">0</span><span class="result-yen">円</span></div>
         </div>
+
     </div>
 </div>
 
@@ -658,14 +785,15 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const TABLE        = 'bbq_items';
 const TABLE_PEOPLE = 'participants';
-const CATEGORIES = ['肉', '野菜・果物', '飲み物', '炭水化物', '調味料・その他'];
-const CAT_ICONS  = { '肉':'🥩', '野菜・果物':'🥦', '飲み物':'🍺', '炭水化物':'🍞', '調味料・その他':'🧂' };
+const TABLE_CONFIG = 'bbq_config';
+const CATEGORIES   = ['肉', '野菜・果物', '飲み物', '炭水化物', '調味料・その他'];
+const CAT_ICONS    = { '肉':'🥩', '野菜・果物':'🥦', '飲み物':'🍺', '炭水化物':'🍞', '調味料・その他':'🧂' };
 
-let items = [];
+let items        = [];
 let participants = [];
-let myName = localStorage.getItem('bbq_user_name') || '';
+let myName       = localStorage.getItem('bbq_user_name') || '';
 
-// 名前モーダル制御
+// ========== 名前モーダル ==========
 function showNameModal() {
     document.getElementById('name-modal').classList.remove('hidden');
     setTimeout(() => document.getElementById('name-input').focus(), 100);
@@ -681,12 +809,10 @@ async function submitName() {
     hideNameModal();
     await sb.from(TABLE_PEOPLE).upsert({ name: myName }, { onConflict: 'name' });
 }
-
 document.getElementById('name-submit-btn').addEventListener('click', submitName);
 document.getElementById('name-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') submitName();
 });
-
 if (!myName) {
     showNameModal();
 } else {
@@ -694,18 +820,19 @@ if (!myName) {
         .then(({ error }) => { if (error) console.error('upsert error:', error); });
 }
 
+// ========== ユーティリティ ==========
 function esc(s) {
     return String(s ?? '')
         .replace(/&/g,'&amp;').replace(/</g,'&lt;')
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ========== データ読み込み ==========
 async function load() {
     const { data, error } = await sb
         .from(TABLE)
         .select('*')
         .order('created_at', { ascending: true });
-
     if (error) { setConn(false); return; }
     items = data;
     render();
@@ -721,6 +848,7 @@ async function loadParticipants() {
     }
 }
 
+// ========== リアルタイム ==========
 sb.channel('bbq-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: TABLE }, () => load())
     .subscribe(status => setConn(status === 'SUBSCRIBED'));
@@ -729,15 +857,22 @@ sb.channel('participants-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_PEOPLE }, () => loadParticipants())
     .subscribe();
 
+sb.channel('config-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_CONFIG }, () => loadAmountEntries())
+    .subscribe();
+
 load();
 loadParticipants();
+loadAmountEntries();
 
+// ========== 接続ステータス ==========
 function setConn(online) {
     const el = document.getElementById('conn-status');
     el.textContent = online ? '● オンライン' : '● オフライン';
     el.className   = 'conn-status ' + (online ? 'online' : 'offline');
 }
 
+// ========== 参加者描画 ==========
 function renderParticipants() {
     document.getElementById('participant-count').textContent = participants.length;
     const tagsEl = document.getElementById('participant-tags');
@@ -750,6 +885,37 @@ function renderParticipants() {
     }
 }
 
+// ========== 挙手者の展開/折り畳み ==========
+function toggleVoters(el) {
+    const wrap = el.closest('.voters-wrap');
+    wrap.querySelector('.voters-short').classList.toggle('hidden');
+    wrap.querySelector('.voters-full').classList.toggle('hidden');
+}
+
+function buildVotersHtml(voters) {
+    if (!voters || voters.length === 0) return '';
+    const MAX = 2;
+    const shortNames = voters.slice(0, MAX).join('・');
+    const remaining  = voters.length - MAX;
+    if (remaining > 0) {
+        return `
+        <div class="voters-wrap">
+            <span class="voters-short" onclick="toggleVoters(this)">
+                ✋ ${esc(shortNames)} <span class="voters-toggle-icon">他${remaining}人 ▼</span>
+            </span>
+            <span class="voters-full hidden" onclick="toggleVoters(this)">
+                ✋ ${esc(voters.join('・'))} <span class="voters-toggle-icon">▲</span>
+            </span>
+        </div>`;
+    } else {
+        return `
+        <div class="voters-wrap">
+            <span class="voters-short">✋ ${esc(shortNames)}</span>
+        </div>`;
+    }
+}
+
+// ========== アイテムリスト描画 ==========
 function render() {
     const total     = items.length;
     const done      = items.filter(i => i.checked).length;
@@ -788,15 +954,17 @@ function render() {
         html += `<div class="category-section">
             <div class="category-title">${CAT_ICONS[cat]} ${esc(cat)}</div>`;
         group.forEach(item => {
-            const voters  = item.voters || [];
-            const voted   = voters.includes(myName);
-            const voterTxt = voters.length ? voters.join('・') : '';
-            const canDelete = item.added_by && item.added_by === myName;
+            const voters    = item.voters || [];
+            const voted     = voters.includes(myName);
+            const votersHtml = buildVotersHtml(voters);
+            const canDelete  = item.added_by && item.added_by === myName;
+            const checkerHtml = item.checked && item.checked_by
+                ? `<div class="checker">✓ ${esc(item.checked_by)}</div>`
+                : '';
             html += `
             <div class="item ${item.checked ? 'checked' : ''}" data-cat="${esc(item.category)}">
                 <div class="checkbox-wrap"
                     data-id="${esc(item.id)}"
-                    data-checked="${item.checked ? '1' : '0'}"
                     onmousedown="startHold(event, '${esc(item.id)}', ${item.checked})"
                     ontouchstart="startHold(event, '${esc(item.id)}', ${item.checked})"
                     onmouseup="cancelHold(event)"
@@ -810,7 +978,8 @@ function render() {
                 </div>
                 <div class="item-info">
                     <div class="item-name">${esc(item.name)}</div>
-                    ${voterTxt ? `<div class="voters">✋ ${esc(voterTxt)}</div>` : ''}
+                    ${checkerHtml}
+                    ${votersHtml}
                 </div>
                 <button class="vote-btn ${voted ? 'voted' : ''}" onclick="voteItem('${esc(item.id)}')">
                     ✋${voters.length ? ' ' + voters.length : ''}
@@ -824,6 +993,7 @@ function render() {
     container.innerHTML = html;
 }
 
+// ========== アイテム追加 ==========
 const addBtn = document.getElementById('add-btn');
 async function addItem() {
     const name     = document.getElementById('item-name').value.trim();
@@ -839,17 +1009,19 @@ async function addItem() {
         addBtn.disabled = false;
     }
 }
-
 addBtn.addEventListener('click', addItem);
 document.getElementById('item-name').addEventListener('keydown', e => {
     if (e.key === 'Enter') addItem();
 });
 
+// ========== チェック（長押し） ==========
 async function toggleItem(id, checked) {
-    await sb.from(TABLE).update({ checked }).eq('id', id);
+    await sb.from(TABLE).update({
+        checked,
+        checked_by: checked ? (myName || null) : null
+    }).eq('id', id);
 }
 
-// ---- 長押しチェック ----
 let holdTimer  = null;
 let holdTarget = null;
 
@@ -872,7 +1044,6 @@ function startHold(e, id, currentChecked) {
         holdTarget = null;
 
         const newChecked = !currentChecked;
-        // チェック済み → アンチェックは confirm
         if (currentChecked) {
             if (!confirm('購入済みを未購入に戻しますか？')) return;
         }
@@ -892,24 +1063,26 @@ function cancelHold(e) {
     }
 }
 
+// ========== 挙手 ==========
 async function voteItem(id) {
     if (!myName) { showNameModal(); return; }
     const item = items.find(i => i.id === id);
     if (!item) return;
-    const voters = item.voters || [];
+    const voters    = item.voters || [];
     const newVoters = voters.includes(myName)
         ? voters.filter(v => v !== myName)
         : [...voters, myName];
     await sb.from(TABLE).update({ voters: newVoters }).eq('id', id);
 }
 
+// ========== 削除 ==========
 async function deleteItem(id) {
     if (confirm('このアイテムを削除しますか？')) {
         await sb.from(TABLE).delete().eq('id', id);
     }
 }
 
-// ---- タブ ----
+// ========== タブ ==========
 function switchTab(tab) {
     document.getElementById('tab-list').classList.toggle('hidden', tab !== 'list');
     document.getElementById('tab-warikan').classList.toggle('hidden', tab !== 'warikan');
@@ -922,31 +1095,88 @@ function switchTab(tab) {
     }
 }
 
-// ---- 割り勘 ----
-const TABLE_CONFIG = 'bbq_config';
-let peopleCount = 1;
+// ========== 割り勘・金額追加 ==========
+// entries = [{ who: "太郎", amount: 3000 }, ...]
+let amountEntries = [];
+let peopleCount   = 1;
+let _isOwnSave    = false;
 
-async function loadConfig() {
-    const { data } = await sb.from(TABLE_CONFIG).select('value').eq('key', 'total_amount').maybeSingle();
-    if (data) {
-        document.getElementById('total-amount').value = data.value || '';
-        calcWarikan();
+async function loadAmountEntries() {
+    if (_isOwnSave) return;
+    const { data } = await sb.from(TABLE_CONFIG)
+        .select('value').eq('key', 'amount_entries').maybeSingle();
+    if (data && data.value) {
+        try {
+            const parsed = JSON.parse(data.value);
+            if (Array.isArray(parsed)) amountEntries = parsed;
+        } catch(e) {}
     }
+    renderEntries();
 }
 
-async function saveTotal() {
-    const val = document.getElementById('total-amount').value || '0';
-    await sb.from(TABLE_CONFIG).upsert({ key: 'total_amount', value: val });
+async function saveAmountEntries() {
+    _isOwnSave = true;
+    await sb.from(TABLE_CONFIG).upsert({
+        key: 'amount_entries',
+        value: JSON.stringify(amountEntries)
+    });
+    setTimeout(() => { _isOwnSave = false; }, 1200);
+}
+
+function renderEntries() {
+    const container = document.getElementById('amount-entries');
+    if (!container) return;
+
+    if (amountEntries.length === 0) {
+        container.innerHTML = '<div class="amount-empty">まだ追加されていません</div>';
+    } else {
+        container.innerHTML = amountEntries.map((e, i) => `
+            <div class="amount-entry">
+                <span class="amount-entry-who">${esc(e.who || '?')}</span>
+                <span class="amount-entry-val">${Number(e.amount).toLocaleString()} 円</span>
+                ${e.who === myName
+                    ? `<button class="amount-entry-del" onclick="removeEntry(${i})">✕</button>`
+                    : ''}
+            </div>
+        `).join('');
+    }
+    calcWarikan();
+}
+
+async function addEntry() {
+    const input  = document.getElementById('new-amount');
+    const amount = parseInt(input.value);
+    if (!amount || amount <= 0) { input.focus(); return; }
+    if (!myName) { showNameModal(); return; }
+
+    amountEntries.push({ who: myName, amount });
+    input.value = '';
+    input.focus();
+    renderEntries();
+    await saveAmountEntries();
+}
+
+async function removeEntry(index) {
+    amountEntries.splice(index, 1);
+    renderEntries();
+    await saveAmountEntries();
 }
 
 function calcWarikan() {
-    const amt = parseInt(document.getElementById('total-amount').value) || 0;
-    const per = peopleCount > 0 ? Math.ceil(amt / peopleCount) : 0;
-    document.getElementById('per-person').textContent = per.toLocaleString();
+    const total = amountEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const totalEl = document.getElementById('entries-total');
+    if (totalEl) totalEl.textContent = total.toLocaleString();
+    const per = peopleCount > 0 ? Math.ceil(total / peopleCount) : 0;
+    const perEl = document.getElementById('per-person');
+    if (perEl) perEl.textContent = per.toLocaleString();
 }
 
-document.getElementById('total-amount').addEventListener('input', () => { calcWarikan(); saveTotal(); });
+// Enterキーで追加
+document.getElementById('new-amount').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addEntry();
+});
 
+// ========== 人数スピナー ==========
 document.getElementById('people-minus').addEventListener('click', () => {
     if (peopleCount <= 1) return;
     peopleCount--;
@@ -960,12 +1190,6 @@ document.getElementById('people-plus').addEventListener('click', () => {
     document.getElementById('people-count').textContent = peopleCount;
     calcWarikan();
 });
-
-sb.channel('config-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_CONFIG }, () => loadConfig())
-    .subscribe();
-
-loadConfig();
 </script>
 </body>
 </html>
