@@ -5,6 +5,13 @@
 set -e
 
 BBQ_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# トークンを .env.local から読み込む
+if [ -f "$BBQ_DIR/.env.local" ]; then
+  set -a
+  source "$BBQ_DIR/.env.local"
+  set +a
+fi
 REPO_DIR="$(cd "$BBQ_DIR/../.." && pwd)"
 MIGRATIONS_DIR="$BBQ_DIR/migrations"
 
