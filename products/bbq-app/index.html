@@ -413,72 +413,143 @@
             margin-bottom: 12px;
         }
 
-        /* ---- 支払い入力テーブル ---- */
-        .payment-table {
-            width: 100%;
-            border-collapse: collapse;
+        /* ---- 支払い追加フォーム ---- */
+        .wf-section-label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #AAA;
+            margin-bottom: 8px;
         }
-        .payment-row {
+        .wf-section-label span { color: #FF9F43; }
+        .wf-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 14px;
+        }
+        .wf-chip {
+            background: #FFF5E6;
+            border: 2px solid #FFE0CC;
+            color: #FF9F43;
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .wf-chip:hover { background: #FFE8CC; border-color: #FF9F43; }
+        .wf-chip.selected {
+            background: #FF9F43;
+            border-color: #FF9F43;
+            color: white;
+            box-shadow: 0 3px 10px rgba(255,159,67,0.4);
+        }
+        .wf-chip.me-chip { border-color: #FF6B6B; color: #FF6B6B; }
+        .wf-chip.me-chip.selected {
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            border-color: #FF6B6B;
+            color: white;
+        }
+        .wf-amount-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #FFF0E0;
+            gap: 8px;
+            margin-bottom: 14px;
         }
-        .payment-row:last-child { border-bottom: none; }
-        .payment-name {
+        .wf-amount-input {
             flex: 1;
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: #555;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            min-width: 0;
-        }
-        .payment-name.me { color: #FF9F43; }
-        .payment-amount-input {
-            width: 120px;
-            font-size: 1.1rem;
+            font-size: 1.6rem;
             font-weight: 800;
             text-align: right;
-            padding: 8px 10px;
+            padding: 10px 14px;
             border: 2px solid #FFE0CC;
-            border-radius: 10px;
+            border-radius: 12px;
             font-family: inherit;
             outline: none;
             background: #FFFAF7;
-            flex-shrink: 0;
         }
-        .payment-amount-input:focus { border-color: #FF6B6B; background: white; }
-        .payment-yen {
-            font-size: 0.9rem;
+        .wf-amount-input:focus { border-color: #FF6B6B; box-shadow: 0 0 0 3px rgba(255,107,107,0.15); background: white; }
+        .wf-amount-yen {
+            font-size: 1.1rem;
             font-weight: 800;
             color: #AAA;
             flex-shrink: 0;
         }
-        .payment-total-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 2px solid #FFE0CC;
-        }
-        .payment-total-label {
-            font-size: 0.85rem;
+        .wf-add-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 13px;
+            font-size: 1rem;
             font-weight: 800;
-            color: #AAA;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 14px rgba(255,107,107,0.4);
         }
-        .payment-total-amount {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: #FF6B6B;
-        }
+        .wf-add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,107,0.5); }
+        .wf-add-btn:active { transform: scale(0.97); }
+        .wf-add-btn:disabled { background: linear-gradient(135deg, #FFB3B3, #FFCC99); box-shadow: none; cursor: default; transform: none; }
         .payer-no-participants {
             font-size: 0.85rem;
             color: #CCC;
             font-weight: 700;
+        }
+
+        /* ---- 支払い履歴リスト ---- */
+        .entry-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .entry-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #FFFAF7;
+            border-radius: 12px;
+            padding: 12px 14px;
+            border-left: 4px solid #FF9F43;
+        }
+        .entry-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+        .entry-info { flex: 1; min-width: 0; }
+        .entry-main {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #555;
+            line-height: 1.4;
+        }
+        .entry-main .entry-payer { color: #FF9F43; }
+        .entry-main .entry-amount { color: #FF6B6B; }
+        .entry-members {
+            font-size: 0.75rem;
+            color: #AAA;
+            font-weight: 700;
+            margin-top: 3px;
+        }
+        .entry-delete-btn {
+            background: #FFF0F0;
+            border: none;
+            color: #FFAAAA;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 5px 8px;
+            border-radius: 8px;
+            transition: color 0.18s, background 0.18s;
+            flex-shrink: 0;
+            font-weight: 800;
+        }
+        .entry-delete-btn:hover { color: #FF4444; background: #FFE0E0; }
+        .entry-empty {
+            text-align: center;
+            color: #CCC;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 16px 0;
         }
 
         /* ---- 精算リスト ---- */
@@ -533,35 +604,6 @@
             font-size: 0.85rem;
             font-weight: 700;
             padding: 16px 0;
-        }
-
-        /* ---- 受け取り合計（立替者行） ---- */
-        .payer-receive-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #FFF5E6, #FFF0D6);
-            border: 2px solid #FFE0CC;
-            border-radius: 12px;
-            padding: 12px 14px;
-        }
-        .payer-receive-info { flex: 1; }
-        .payer-receive-name {
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: #FF9F43;
-        }
-        .payer-receive-sub {
-            font-size: 0.75rem;
-            color: #CCC;
-            font-weight: 700;
-            margin-top: 2px;
-        }
-        .payer-receive-amount {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #FF9F43;
-            flex-shrink: 0;
         }
 
         /* ---- 1人あたり結果 ---- */
@@ -649,94 +691,6 @@
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
-
-        /* ---- 割り勘: 名前チップ選択UI ---- */
-        .payer-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .payer-chip {
-            background: #FFF5E6;
-            border: 2px solid #FFE0CC;
-            color: #FF9F43;
-            border-radius: 20px;
-            padding: 6px 16px;
-            font-size: 0.88rem;
-            font-weight: 800;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
-        .payer-chip:hover { background: #FFE8CC; border-color: #FF9F43; }
-        .payer-chip.selected {
-            background: #FF9F43;
-            border-color: #FF9F43;
-            color: white;
-            box-shadow: 0 3px 10px rgba(255,159,67,0.4);
-        }
-        .payer-chip.me-chip {
-            border-color: #FF6B6B;
-            color: #FF6B6B;
-        }
-        .payer-chip.me-chip.selected {
-            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
-            border-color: #FF6B6B;
-            color: white;
-        }
-
-        /* 選択された人の金額入力欄 */
-        .selected-payment-area {
-            background: #FFFAF7;
-            border-radius: 14px;
-            padding: 16px;
-            border: 2px solid #FFE0CC;
-        }
-        .selected-payment-label {
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: #AAA;
-            margin-bottom: 10px;
-        }
-        .selected-payment-label span { color: #FF9F43; }
-        .selected-payment-input-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .selected-payment-input {
-            flex: 1;
-            font-size: 1.8rem;
-            font-weight: 800;
-            text-align: right;
-            padding: 10px 14px;
-            border: 2px solid #FFE0CC;
-            border-radius: 12px;
-            font-family: inherit;
-            outline: none;
-            background: white;
-        }
-        .selected-payment-input:focus { border-color: #FF6B6B; box-shadow: 0 0 0 3px rgba(255,107,107,0.15); }
-        .selected-payment-yen {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #AAA;
-            flex-shrink: 0;
-        }
-
-        /* 全員の支払いサマリー */
-        .payment-summary {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #AAA;
-            line-height: 1.8;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px 12px;
-        }
-        .payment-summary-item { white-space: nowrap; }
-        .payment-summary-item.has-amount { color: #FF9F43; }
 
         /* ---- 精算フィルターチップ ---- */
         .settlement-filter-chips {
@@ -884,52 +838,54 @@
 <div id="tab-warikan" class="tab-panel hidden">
     <div class="warikan-wrap">
 
-        <!-- 支払い入力カード -->
+        <!-- 支払い追加フォーム -->
         <div class="warikan-card">
-            <div class="warikan-label">💴 支払い額を入力</div>
+            <div class="warikan-label">💳 支払いを追加</div>
 
-            <!-- 名前チップ一覧 -->
-            <div id="payer-chips" class="payer-chips">
+            <!-- 払った人 -->
+            <div class="wf-section-label">払った人</div>
+            <div id="wf-payer-chips" class="wf-chips">
                 <span class="payer-no-participants">参加者を読み込み中…</span>
             </div>
 
-            <!-- 選択した人の入力欄 -->
-            <div class="selected-payment-area">
-                <div class="selected-payment-label" id="selected-payment-label">
-                    <span id="selected-name-label">—</span> さんが払った金額
-                </div>
-                <div class="selected-payment-input-row">
-                    <input type="number" class="selected-payment-input" id="selected-payment-input"
-                        placeholder="0" min="0" inputmode="numeric" disabled>
-                    <span class="selected-payment-yen">円</span>
-                </div>
+            <!-- 金額 -->
+            <div class="wf-section-label">金額</div>
+            <div class="wf-amount-row">
+                <input type="number" class="wf-amount-input" id="wf-amount"
+                    placeholder="0" min="0" inputmode="numeric">
+                <span class="wf-amount-yen">円</span>
             </div>
 
-            <!-- 全員のサマリー -->
-            <div style="margin-top:14px;">
-                <div class="warikan-label" style="margin-bottom:6px;">全員の支払い</div>
-                <div class="payment-summary" id="payment-summary">—</div>
+            <!-- 誰の分 -->
+            <div class="wf-section-label">誰の分</div>
+            <div id="wf-member-chips" class="wf-chips">
+                <span class="payer-no-participants">参加者を読み込み中…</span>
             </div>
 
-            <div class="payment-total-row">
-                <span class="payment-total-label">合計</span>
-                <span><span class="payment-total-amount" id="payment-total">0</span><span class="payment-yen">円</span></span>
+            <button class="wf-add-btn" id="wf-add-btn">＋ 追加</button>
+        </div>
+
+        <!-- 支払い履歴リスト -->
+        <div class="warikan-card">
+            <div class="warikan-label">📋 支払い履歴</div>
+            <div class="entry-list" id="entry-list">
+                <div class="entry-empty">支払いを追加してください</div>
             </div>
         </div>
 
-        <!-- 1人あたり -->
+        <!-- 精算サマリー -->
         <div class="warikan-result">
-            <div class="result-label">1人あたり</div>
+            <div class="result-label">合計 / 1人あたり</div>
             <div><span class="result-num" id="per-person">0</span><span class="result-yen">円</span></div>
             <div class="result-sub" id="result-sub"></div>
         </div>
 
         <!-- 精算リスト -->
         <div class="warikan-card">
-            <div class="warikan-label">━━ 精算リスト ━━</div>
+            <div class="warikan-label">━━ 精算 ━━</div>
             <div class="settlement-filter-chips" id="settlement-filter-chips"></div>
             <div class="settlement-list" id="settlement-list">
-                <div class="settlement-empty">支払い額を入力してください</div>
+                <div class="settlement-empty">支払いを追加してください</div>
             </div>
         </div>
 
@@ -1060,8 +1016,7 @@ function renderParticipants() {
     }
     // 割り勘タブが表示中なら精算リストも更新
     if (!document.getElementById('tab-warikan').classList.contains('hidden')) {
-        renderPayerChips();
-        calcSettlement();
+        renderWarikanUI();
     }
 }
 
@@ -1269,188 +1224,210 @@ function switchTab(tab) {
     document.getElementById('tab-btn-list').classList.toggle('active', tab === 'list');
     document.getElementById('tab-btn-warikan').classList.toggle('active', tab === 'warikan');
     if (tab === 'warikan') {
-        renderPayerChips();
-        calcSettlement();
+        renderWarikanUI();
     }
 }
 
-// ========== 割り勘・複数立替者精算 ==========
-// paymentMap: { 名前: 金額(number) }
-let paymentMap = {};
-let _isOwnSave = false;
+// ========== 割り勘・ワリカ型支払い記録 ==========
+// warikanEntries: 支払い記録の配列
+// { id, payer, amount, members, created_at }
+let warikanEntries = [];
+let _isOwnWariSave = false;
 
-// Supabaseから各人の支払い額を読み込む
+// フォーム状態
+let wfSelectedPayer = '';   // 払った人
+let wfSelectedMembers = []; // 誰の分（複数）
+
+// Supabaseからwarikan_entriesを読み込む
 async function loadAmountEntries(forceLoad = false) {
-    if (!forceLoad && _isOwnSave) return;
+    if (!forceLoad && _isOwnWariSave) return;
 
-    const { data, error } = await sb.from(TABLE_CONFIG).select('key, value');
-    if (error) { console.error('loadAmountEntries error:', error); return; }
+    const { data, error } = await sb.from(TABLE_CONFIG).select('key, value').eq('key', 'warikan_entries');
+    if (error) { console.error('loadWarikanEntries error:', error); return; }
 
-    if (data) {
-        data.forEach(row => {
-            if (row.key.startsWith('payment_')) {
-                const name = row.key.slice('payment_'.length);
-                const v = parseInt(row.value);
-                if (!isNaN(v) && v >= 0) {
-                    paymentMap[name] = v;
-                }
-            }
-        });
+    if (data && data.length > 0) {
+        try {
+            warikanEntries = JSON.parse(data[0].value) || [];
+        } catch(e) {
+            warikanEntries = [];
+        }
+    } else {
+        warikanEntries = [];
     }
-    renderPaymentInputs();
-    calcSettlement();
+
+    renderWarikanUI();
 }
 
-// 1人分の支払い額をSupabaseに保存
-async function savePayment(name, amount) {
-    _isOwnSave = true;
-    const key = 'payment_' + name;
+// warikan_entriesをSupabaseに保存
+async function saveWarikanEntries() {
+    _isOwnWariSave = true;
     await sb.from(TABLE_CONFIG).upsert(
-        { key, value: String(amount) },
+        { key: 'warikan_entries', value: JSON.stringify(warikanEntries) },
         { onConflict: 'key' }
     );
-    setTimeout(() => { _isOwnSave = false; }, 1200);
+    setTimeout(() => { _isOwnWariSave = false; }, 1200);
 }
 
-// 現在選択中の支払い対象者
-let selectedPayerName = '';
-
-// 名前チップを選択する
-function selectPayerChip(name) {
-    selectedPayerName = name;
-
-    // チップのactive状態を更新
-    document.querySelectorAll('.payer-chip').forEach(chip => {
+// 払った人チップを選択
+function selectWfPayer(name) {
+    wfSelectedPayer = name;
+    document.querySelectorAll('#wf-payer-chips .wf-chip').forEach(chip => {
         chip.classList.toggle('selected', chip.dataset.name === name);
     });
-
-    // ラベル更新
-    const labelEl = document.getElementById('selected-name-label');
-    if (labelEl) labelEl.textContent = name;
-
-    // 入力欄を更新（Supabase保存値を反映）
-    const input = document.getElementById('selected-payment-input');
-    if (input) {
-        input.disabled = false;
-        const val = paymentMap[name];
-        input.value = (val != null && val > 0) ? val : '';
-        input.focus();
-    }
 }
 
-// 支払い入力UI（チップ選択式）を描画
-function renderPaymentInputs() {
-    const chipsWrap = document.getElementById('payer-chips');
-    if (!chipsWrap) return;
+// 誰の分チップをトグル
+function toggleWfMember(name) {
+    if (wfSelectedMembers.includes(name)) {
+        wfSelectedMembers = wfSelectedMembers.filter(n => n !== name);
+    } else {
+        wfSelectedMembers.push(name);
+    }
+    document.querySelectorAll('#wf-member-chips .wf-chip').forEach(chip => {
+        chip.classList.toggle('selected', wfSelectedMembers.includes(chip.dataset.name));
+    });
+}
 
+// 払った人チップ描画
+function renderWfPayerChips() {
+    const wrap = document.getElementById('wf-payer-chips');
+    if (!wrap) return;
     if (participants.length === 0) {
-        chipsWrap.innerHTML = '<span class="payer-no-participants">参加者がいません。まず参加者登録してください。</span>';
-        const input = document.getElementById('selected-payment-input');
-        if (input) { input.disabled = true; input.value = ''; }
-        const labelEl = document.getElementById('selected-name-label');
-        if (labelEl) labelEl.textContent = '—';
-        updatePaymentTotal();
-        renderPaymentSummary();
+        wrap.innerHTML = '<span class="payer-no-participants">参加者がいません。まず参加者登録してください。</span>';
+        return;
+    }
+    // デフォルト選択
+    if (!wfSelectedPayer || !participants.includes(wfSelectedPayer)) {
+        wfSelectedPayer = participants.includes(myName) ? myName : participants[0];
+    }
+    wrap.innerHTML = participants.map(name => `
+        <button class="wf-chip ${name === myName ? 'me-chip' : ''} ${name === wfSelectedPayer ? 'selected' : ''}"
+            data-name="${esc(name)}"
+            onclick="selectWfPayer('${esc(name)}')">${esc(name)}</button>
+    `).join('');
+}
+
+// 誰の分チップ描画
+function renderWfMemberChips() {
+    const wrap = document.getElementById('wf-member-chips');
+    if (!wrap) return;
+    if (participants.length === 0) {
+        wrap.innerHTML = '<span class="payer-no-participants">参加者がいません。</span>';
+        return;
+    }
+    // デフォルト: 全員選択
+    if (wfSelectedMembers.length === 0) {
+        wfSelectedMembers = [...participants];
+    }
+    wrap.innerHTML = participants.map(name => `
+        <button class="wf-chip ${name === myName ? 'me-chip' : ''} ${wfSelectedMembers.includes(name) ? 'selected' : ''}"
+            data-name="${esc(name)}"
+            onclick="toggleWfMember('${esc(name)}')">${esc(name)}</button>
+    `).join('');
+}
+
+// 支払い履歴リストを描画
+function renderEntryList() {
+    const listEl = document.getElementById('entry-list');
+    if (!listEl) return;
+    if (warikanEntries.length === 0) {
+        listEl.innerHTML = '<div class="entry-empty">支払いを追加してください</div>';
+        return;
+    }
+    // 新しい順に表示
+    const sorted = [...warikanEntries].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    listEl.innerHTML = sorted.map(entry => {
+        const memberCount = entry.members.length;
+        const memberLabel = memberCount === participants.length && participants.length > 0
+            ? `全員 の${memberCount}人分`
+            : `${entry.members.map(m => esc(m)).join('・')} の${memberCount}人分`;
+        return `
+        <div class="entry-row">
+            <span class="entry-icon">💳</span>
+            <div class="entry-info">
+                <div class="entry-main">
+                    <span class="entry-payer">${esc(entry.payer)}</span> が
+                    <span class="entry-amount">${Number(entry.amount).toLocaleString()}円</span> 払った
+                </div>
+                <div class="entry-members">（${memberLabel}）</div>
+            </div>
+            <button class="entry-delete-btn" onclick="deleteWarikanEntry('${esc(entry.id)}')">✕</button>
+        </div>`;
+    }).join('');
+}
+
+// 支払いエントリーを追加
+async function addWarikanEntry() {
+    const amountInput = document.getElementById('wf-amount');
+    const amount = parseInt(amountInput.value) || 0;
+
+    if (!wfSelectedPayer) {
+        alert('払った人を選んでください');
+        return;
+    }
+    if (amount <= 0) {
+        alert('金額を入力してください');
+        amountInput.focus();
+        return;
+    }
+    if (wfSelectedMembers.length === 0) {
+        alert('誰の分か選んでください');
         return;
     }
 
-    // チップリスト再描画（参加者リストが変わった場合）
-    const prevNames = Array.from(chipsWrap.querySelectorAll('.payer-chip')).map(c => c.dataset.name);
-    const needsRebuild = prevNames.join(',') !== participants.join(',');
+    const btn = document.getElementById('wf-add-btn');
+    btn.disabled = true;
 
-    if (needsRebuild) {
-        chipsWrap.innerHTML = participants.map(name => `
-            <button class="payer-chip ${name === myName ? 'me-chip' : ''} ${name === selectedPayerName ? 'selected' : ''}"
-                data-name="${esc(name)}"
-                onclick="selectPayerChip('${esc(name)}')">${esc(name)}</button>
-        `).join('');
+    const entry = {
+        id: crypto.randomUUID(),
+        payer: wfSelectedPayer,
+        amount,
+        members: [...wfSelectedMembers],
+        created_at: new Date().toISOString()
+    };
+    warikanEntries.push(entry);
+    await saveWarikanEntries();
 
-        // 選択中の人が参加者から消えた場合はデフォルトに戻す
-        if (!participants.includes(selectedPayerName)) {
-            const defaultName = participants.includes(myName) ? myName : participants[0];
-            selectedPayerName = defaultName || '';
-        }
-        if (selectedPayerName) {
-            selectPayerChip(selectedPayerName);
-        }
-    } else {
-        // 参加者リストが同じ場合: 選択中以外の入力欄値を更新
-        if (selectedPayerName) {
-            const input = document.getElementById('selected-payment-input');
-            if (input && document.activeElement !== input) {
-                const val = paymentMap[selectedPayerName];
-                const newVal = (val != null && val > 0) ? String(val) : '';
-                if (input.value !== newVal) input.value = newVal;
-            }
-        }
-    }
+    // フォームリセット
+    amountInput.value = '';
+    // 誰の分は全員に戻す
+    wfSelectedMembers = [...participants];
+    renderWfMemberChips();
 
-    // 初期選択がなければデフォルトを選択
-    if (!selectedPayerName && participants.length > 0) {
-        const defaultName = participants.includes(myName) ? myName : participants[0];
-        selectPayerChip(defaultName);
-    }
-
-    updatePaymentTotal();
-    renderPaymentSummary();
+    renderEntryList();
+    calcSettlement();
+    btn.disabled = false;
 }
 
-// 全員の支払いサマリー（読み取り専用）を描画
-function renderPaymentSummary() {
-    const summaryEl = document.getElementById('payment-summary');
-    if (!summaryEl) return;
-    if (participants.length === 0) { summaryEl.innerHTML = '—'; return; }
-    summaryEl.innerHTML = participants.map(name => {
-        const val = paymentMap[name] || 0;
-        const hasAmount = val > 0;
-        return `<span class="payment-summary-item ${hasAmount ? 'has-amount' : ''}">${esc(name)} ${val.toLocaleString()}円</span>`;
-    }).join('<span style="color:#DDD;">／</span>');
+// 支払いエントリーを削除
+async function deleteWarikanEntry(id) {
+    if (!confirm('この支払い記録を削除しますか？')) return;
+    warikanEntries = warikanEntries.filter(e => e.id !== id);
+    await saveWarikanEntries();
+    renderEntryList();
+    calcSettlement();
 }
 
-// 選択中の支払い入力欄のイベントを設定（初期化時に1回）
-function initSelectedPaymentInput() {
-    const input = document.getElementById('selected-payment-input');
-    if (!input) return;
-
-    input.addEventListener('input', () => {
-        if (!selectedPayerName) return;
-        const val = parseInt(input.value) || 0;
-        paymentMap[selectedPayerName] = val;
-        updatePaymentTotal();
-        renderPaymentSummary();
-        calcSettlement();
-    });
-
-    input.addEventListener('blur', async () => {
-        if (!selectedPayerName) return;
-        const val = parseInt(input.value) || 0;
-        paymentMap[selectedPayerName] = val;
-        await savePayment(selectedPayerName, val);
-    });
-}
-initSelectedPaymentInput();
-
-function updatePaymentTotal() {
-    const total = participants.reduce((sum, name) => sum + (paymentMap[name] || 0), 0);
-    const el = document.getElementById('payment-total');
-    if (el) el.textContent = total.toLocaleString();
-    renderPaymentSummary();
+// 割り勘タブ全体を描画
+function renderWarikanUI() {
+    renderWfPayerChips();
+    renderWfMemberChips();
+    renderEntryList();
+    calcSettlement();
 }
 
 // 旧API互換（renderParticipants等から呼ばれる）
 function renderPayerChips() {
-    renderPaymentInputs();
+    renderWarikanUI();
 }
 
 // ========== 精算フィルター ==========
-// 'all' または参加者名
-let settlementFilterName = '__my__'; // 初期値は自分（後でmyNameで上書き）
+let settlementFilterName = '__my__';
 
 function renderSettlementFilterChips() {
     const wrap = document.getElementById('settlement-filter-chips');
     if (!wrap) return;
 
-    // 初回: デフォルトをmyNameにセット
     if (settlementFilterName === '__my__') {
         settlementFilterName = participants.includes(myName) ? myName : 'all';
     }
@@ -1481,50 +1458,57 @@ function selectSettlementFilter(name) {
     calcSettlement();
 }
 
-// greedy algorithmで精算リストを計算
+// ========== 精算計算（greedy） ==========
 function calcSettlement() {
-    const count = participants.length;
-    const total = participants.reduce((sum, name) => sum + (paymentMap[name] || 0), 0);
-
-    // 1人あたり（小数点以下切り捨て）
-    const perPerson = count > 0 ? Math.floor(total / count) : 0;
-
-    const perEl = document.getElementById('per-person');
-    if (perEl) perEl.textContent = perPerson.toLocaleString();
-
-    const subEl = document.getElementById('result-sub');
-    if (subEl) subEl.textContent = count > 0 ? `${total.toLocaleString()}円 ÷ ${count}人` : '';
-
     const listEl = document.getElementById('settlement-list');
-    if (!listEl) return;
+    const perEl  = document.getElementById('per-person');
+    const subEl  = document.getElementById('result-sub');
 
-    if (total === 0 || count === 0) {
+    if (warikanEntries.length === 0) {
+        if (perEl) perEl.textContent = '0';
+        if (subEl) subEl.textContent = '';
         renderSettlementFilterChips();
-        listEl.innerHTML = '<div class="settlement-empty">支払い額を入力してください</div>';
+        if (listEl) listEl.innerHTML = '<div class="settlement-empty">支払いを追加してください</div>';
         return;
     }
 
-    // 各人のネット残高を計算（正 = 受け取る側、負 = 払う側）
-    const balances = participants.map(name => ({
-        name,
-        balance: (paymentMap[name] || 0) - perPerson
-    }));
+    // 全参加者のnet残高を計算
+    // 立替額 = 自分がpayerの支払い合計
+    // 負担額 = 自分がmembersに含まれる支払いの 金額÷人数 の合計
+    const allNames = new Set();
+    warikanEntries.forEach(e => {
+        allNames.add(e.payer);
+        e.members.forEach(m => allNames.add(m));
+    });
 
-    // 端数処理: 余りを最初の人に加算（合計が割り切れない場合）
-    const remainder = total - perPerson * count;
-    if (remainder > 0 && balances.length > 0) {
-        balances[0].balance += remainder;
-    }
+    const balanceMap = {};
+    allNames.forEach(n => { balanceMap[n] = 0; });
 
-    // greedy: 債務者(negative)と債権者(positive)をマッチング
-    const creditors = balances.filter(b => b.balance > 0).map(b => ({ ...b }));
-    const debtors   = balances.filter(b => b.balance < 0).map(b => ({ ...b }));
+    let grandTotal = 0;
+    warikanEntries.forEach(entry => {
+        const share = entry.amount / entry.members.length;
+        balanceMap[entry.payer] = (balanceMap[entry.payer] || 0) + entry.amount;
+        entry.members.forEach(m => {
+            balanceMap[m] = (balanceMap[m] || 0) - share;
+        });
+        grandTotal += entry.amount;
+    });
 
-    // 精算が不要かどうか確認
-    const allZero = balances.every(b => Math.abs(b.balance) < 1);
-    if (allZero) {
-        renderSettlementFilterChips();
-        listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
+    // 参加者全体で1人あたりを表示（参加者ベース）
+    const count = participants.length || allNames.size;
+    const perPerson = count > 0 ? Math.round(grandTotal / count) : 0;
+    if (perEl) perEl.textContent = perPerson.toLocaleString();
+    if (subEl) subEl.textContent = `合計 ${grandTotal.toLocaleString()}円 ÷ ${count}人`;
+
+    // greedy精算
+    const balances = Object.entries(balanceMap).map(([name, bal]) => ({ name, balance: bal }));
+    const creditors = balances.filter(b => b.balance > 0.5).map(b => ({ ...b }));
+    const debtors   = balances.filter(b => b.balance < -0.5).map(b => ({ ...b }));
+
+    renderSettlementFilterChips();
+
+    if (creditors.length === 0 || debtors.length === 0) {
+        if (listEl) listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
         return;
     }
 
@@ -1539,30 +1523,25 @@ function calcSettlement() {
         }
         c.balance -= amount;
         d.balance += amount;
-        if (Math.abs(c.balance) < 1) ci++;
-        if (Math.abs(d.balance) < 1) di++;
+        if (c.balance < 0.5) ci++;
+        if (d.balance > -0.5) di++;
     }
 
     if (transactions.length === 0) {
-        renderSettlementFilterChips();
-        listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
+        if (listEl) listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
         return;
     }
 
-    // フィルターチップを描画
-    renderSettlementFilterChips();
-
-    // フィルタリング: 'all'なら全件、それ以外は払う側(from)が一致する行のみ
     const filtered = settlementFilterName === 'all'
         ? transactions
         : transactions.filter(t => t.from === settlementFilterName);
 
     if (filtered.length === 0) {
-        listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
+        if (listEl) listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
         return;
     }
 
-    listEl.innerHTML = filtered.map(t => `
+    if (listEl) listEl.innerHTML = filtered.map(t => `
         <div class="settlement-row">
             <span class="settlement-avatar">🙋</span>
             <div class="settlement-info">
@@ -1576,6 +1555,12 @@ function calcSettlement() {
         </div>
     `).join('');
 }
+
+// 割り勘フォームの追加ボタンを初期化
+document.getElementById('wf-add-btn').addEventListener('click', addWarikanEntry);
+document.getElementById('wf-amount').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addWarikanEntry();
+});
 </script>
 </body>
 </html>
