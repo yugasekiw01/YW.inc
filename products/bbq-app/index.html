@@ -1763,6 +1763,34 @@ document.getElementById('participant-name-input').addEventListener('keydown', e 
 // ========== 参加者の削除 ==========
 async function removeParticipant(name) {
     if (!confirm(`「${name}」を参加者から削除しますか？`)) return;
+
+    // 割り勘履歴から削除対象者を除外する
+    // 最新データをSupabaseから取得
+    const { data: configData } = await sb.from(TABLE_CONFIG).select('key, value').eq('key', 'warikan_entries');
+    let currentEntries = [];
+    if (configData && configData.length > 0) {
+        try { currentEntries = JSON.parse(configData[0].value) || []; } catch(e) { currentEntries = []; }
+    }
+
+    const updatedEntries = currentEntries
+        // payer が削除対象の場合はエントリーごと削除
+        .filter(entry => entry.payer !== name)
+        // members から削除対象を除去し、members が空になったエントリーも削除
+        .map(entry => ({ ...entry, members: entry.members.filter(m => m !== name) }))
+        .filter(entry => entry.members.length > 0);
+
+    // warikan_entries に変更があった場合のみ保存
+    if (updatedEntries.length !== currentEntries.length ||
+        JSON.stringify(updatedEntries) !== JSON.stringify(currentEntries)) {
+        warikanEntries = updatedEntries;
+        _isOwnWariSave = true;
+        await sb.from(TABLE_CONFIG).upsert(
+            { key: 'warikan_entries', value: JSON.stringify(warikanEntries) },
+            { onConflict: 'key' }
+        );
+        setTimeout(() => { _isOwnWariSave = false; }, 1200);
+    }
+
     await sb.from(TABLE_PEOPLE).delete().eq('name', name);
 }
 
