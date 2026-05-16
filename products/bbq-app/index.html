@@ -738,6 +738,54 @@
         .payment-summary-item { white-space: nowrap; }
         .payment-summary-item.has-amount { color: #FF9F43; }
 
+        /* ---- 精算フィルターチップ ---- */
+        .settlement-filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .settlement-filter-chip {
+            background: #FFF5E6;
+            border: 2px solid #FFE0CC;
+            color: #FF9F43;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.88rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .settlement-filter-chip:hover { background: #FFE8CC; border-color: #FF9F43; }
+        .settlement-filter-chip.selected {
+            background: #FF9F43;
+            border-color: #FF9F43;
+            color: white;
+            box-shadow: 0 3px 10px rgba(255,159,67,0.4);
+        }
+        .settlement-filter-chip.me-chip {
+            border-color: #FF6B6B;
+            color: #FF6B6B;
+        }
+        .settlement-filter-chip.me-chip.selected {
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            border-color: #FF6B6B;
+            color: white;
+        }
+        .settlement-filter-chip.all-chip {
+            background: #F5F5F5;
+            border-color: #DDD;
+            color: #888;
+        }
+        .settlement-filter-chip.all-chip:hover { background: #E8E8E8; border-color: #BBB; }
+        .settlement-filter-chip.all-chip.selected {
+            background: #888;
+            border-color: #888;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
         /* ---- 読み込み中 ---- */
         .loading {
             text-align: center;
@@ -879,6 +927,7 @@
         <!-- 精算リスト -->
         <div class="warikan-card">
             <div class="warikan-label">━━ 精算リスト ━━</div>
+            <div class="settlement-filter-chips" id="settlement-filter-chips"></div>
             <div class="settlement-list" id="settlement-list">
                 <div class="settlement-empty">支払い額を入力してください</div>
             </div>
@@ -1393,6 +1442,45 @@ function renderPayerChips() {
     renderPaymentInputs();
 }
 
+// ========== 精算フィルター ==========
+// 'all' または参加者名
+let settlementFilterName = '__my__'; // 初期値は自分（後でmyNameで上書き）
+
+function renderSettlementFilterChips() {
+    const wrap = document.getElementById('settlement-filter-chips');
+    if (!wrap) return;
+
+    // 初回: デフォルトをmyNameにセット
+    if (settlementFilterName === '__my__') {
+        settlementFilterName = participants.includes(myName) ? myName : 'all';
+    }
+
+    if (participants.length === 0) {
+        wrap.innerHTML = '';
+        return;
+    }
+
+    const chips = [
+        `<button class="settlement-filter-chip all-chip ${settlementFilterName === 'all' ? 'selected' : ''}"
+            onclick="selectSettlementFilter('all')">全員</button>`
+    ];
+    participants.forEach(name => {
+        const isMe = name === myName;
+        const isSelected = settlementFilterName === name;
+        chips.push(
+            `<button class="settlement-filter-chip ${isMe ? 'me-chip' : ''} ${isSelected ? 'selected' : ''}"
+                onclick="selectSettlementFilter('${esc(name)}')">${esc(name)}</button>`
+        );
+    });
+    wrap.innerHTML = chips.join('');
+}
+
+function selectSettlementFilter(name) {
+    settlementFilterName = name;
+    renderSettlementFilterChips();
+    calcSettlement();
+}
+
 // greedy algorithmで精算リストを計算
 function calcSettlement() {
     const count = participants.length;
@@ -1411,6 +1499,7 @@ function calcSettlement() {
     if (!listEl) return;
 
     if (total === 0 || count === 0) {
+        renderSettlementFilterChips();
         listEl.innerHTML = '<div class="settlement-empty">支払い額を入力してください</div>';
         return;
     }
@@ -1434,6 +1523,7 @@ function calcSettlement() {
     // 精算が不要かどうか確認
     const allZero = balances.every(b => Math.abs(b.balance) < 1);
     if (allZero) {
+        renderSettlementFilterChips();
         listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
         return;
     }
@@ -1454,11 +1544,25 @@ function calcSettlement() {
     }
 
     if (transactions.length === 0) {
+        renderSettlementFilterChips();
         listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
         return;
     }
 
-    listEl.innerHTML = transactions.map(t => `
+    // フィルターチップを描画
+    renderSettlementFilterChips();
+
+    // フィルタリング: 'all'なら全件、それ以外は払う側(from)が一致する行のみ
+    const filtered = settlementFilterName === 'all'
+        ? transactions
+        : transactions.filter(t => t.from === settlementFilterName);
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="settlement-empty">精算不要です🎉</div>';
+        return;
+    }
+
+    listEl.innerHTML = filtered.map(t => `
         <div class="settlement-row">
             <span class="settlement-avatar">🙋</span>
             <div class="settlement-info">
