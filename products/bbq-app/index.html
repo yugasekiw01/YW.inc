@@ -413,15 +413,15 @@
             margin-bottom: 12px;
         }
 
-        /* ---- 割り勘・金額追加 ---- */
-        .amount-add-row {
+        /* ---- 合計金額入力 ---- */
+        .total-input-row {
             display: flex;
+            align-items: center;
             gap: 8px;
-            margin-bottom: 12px;
         }
-        .amount-add-input {
+        .total-amount-input {
             flex: 1;
-            font-size: 1.3rem;
+            font-size: 1.6rem;
             font-weight: 800;
             text-align: right;
             padding: 12px 14px;
@@ -432,125 +432,132 @@
             background: #FFFAF7;
             min-width: 0;
         }
-        .amount-add-input:focus { border-color: #FF6B6B; background: white; }
-        .amount-yen {
-            font-size: 1rem;
+        .total-amount-input:focus { border-color: #FF6B6B; background: white; }
+        .total-yen {
+            font-size: 1.1rem;
             font-weight: 800;
             color: #AAA;
-            align-self: center;
             flex-shrink: 0;
         }
-        .amount-add-btn {
-            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 18px;
-            font-size: 1rem;
+
+        /* ---- 立替者選択 ---- */
+        .payer-select-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .payer-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #FFE0CC;
+            background: #FFFAF7;
+            color: #999;
+            font-size: 0.9rem;
             font-weight: 800;
             font-family: inherit;
             cursor: pointer;
-            flex-shrink: 0;
-            transition: transform 0.12s;
+            transition: all 0.18s;
         }
-        .amount-add-btn:active { transform: scale(0.95); }
+        .payer-chip:hover { border-color: #FF9F43; color: #FF9F43; }
+        .payer-chip.selected {
+            background: #FF9F43;
+            border-color: #FF9F43;
+            color: white;
+        }
+        .payer-no-participants {
+            font-size: 0.85rem;
+            color: #CCC;
+            font-weight: 700;
+        }
 
-        /* 追加履歴リスト */
-        .amount-list {
+        /* ---- 精算リスト ---- */
+        .settlement-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-bottom: 12px;
-            max-height: 200px;
-            overflow-y: auto;
+            gap: 10px;
         }
-        .amount-entry {
+        .settlement-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             background: #FFFAF7;
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 0.9rem;
+            border-radius: 12px;
+            padding: 12px 14px;
         }
-        .amount-entry-who {
-            font-weight: 800;
-            color: #FF9F43;
+        .settlement-avatar {
+            font-size: 1.3rem;
             flex-shrink: 0;
         }
-        .amount-entry-val {
+        .settlement-info {
             flex: 1;
-            font-weight: 800;
-            color: #333;
-            text-align: right;
+            min-width: 0;
         }
-        .amount-entry-del {
-            background: none;
-            border: none;
-            color: #FFAAAA;
-            cursor: pointer;
-            font-size: 0.85rem;
+        .settlement-name {
+            font-size: 0.9rem;
             font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 6px;
+            color: #555;
+        }
+        .settlement-arrow {
+            font-size: 0.78rem;
+            color: #AAA;
+            font-weight: 700;
+        }
+        .settlement-payer-name {
+            color: #FF9F43;
+        }
+        .settlement-amount {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #FF6B6B;
             flex-shrink: 0;
-            transition: color 0.15s;
         }
-        .amount-entry-del:hover { color: #FF4444; }
-        .amount-empty {
+        .settlement-yen {
+            font-size: 0.8rem;
+            color: #AAA;
+            font-weight: 700;
+        }
+        .settlement-empty {
             text-align: center;
-            color: #DDD;
+            color: #CCC;
             font-size: 0.85rem;
             font-weight: 700;
-            padding: 12px 0;
+            padding: 16px 0;
         }
-        .entries-divider {
-            border: none;
-            border-top: 2px dashed #FFE0CC;
-            margin: 4px 0 10px;
-        }
-        .entries-total-row {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 6px;
-            font-weight: 800;
-        }
-        .entries-total-row .total-label { color: #AAA; font-size: 0.82rem; margin-right: auto; }
-        .entries-total-num { font-size: 1.3rem; color: #FF6B6B; }
-        .entry-yen { font-size: 0.85rem; font-weight: 800; color: #AAA; flex-shrink: 0; }
 
-        .spinner-row {
+        /* ---- 受け取り合計（立替者行） ---- */
+        .payer-receive-row {
             display: flex;
             align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #FFF5E6, #FFF0D6);
             border: 2px solid #FFE0CC;
             border-radius: 12px;
-            overflow: hidden;
+            padding: 12px 14px;
         }
-        .spin-btn {
-            background: #FFF5E6;
-            border: none;
-            padding: 12px 22px;
-            font-size: 1.4rem;
+        .payer-receive-info { flex: 1; }
+        .payer-receive-name {
+            font-size: 0.9rem;
             font-weight: 800;
             color: #FF9F43;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background 0.15s;
         }
-        .spin-btn:hover  { background: #FFE8CC; }
-        .spin-btn:active { background: #FF9F43; color: white; }
-        .spin-count {
-            flex: 1;
-            text-align: center;
-            font-size: 1.5rem;
+        .payer-receive-sub {
+            font-size: 0.75rem;
+            color: #CCC;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+        .payer-receive-amount {
+            font-size: 1.3rem;
             font-weight: 800;
-            color: #333;
+            color: #FF9F43;
+            flex-shrink: 0;
         }
+
+        /* ---- 1人あたり結果 ---- */
         .warikan-result {
             background: linear-gradient(135deg, #FF6B6B, #FF9F43);
             border-radius: 20px;
-            padding: 28px 20px;
+            padding: 22px 20px;
             text-align: center;
             box-shadow: 0 8px 24px rgba(255,107,107,0.3);
         }
@@ -571,6 +578,12 @@
             font-weight: 800;
             color: rgba(255,255,255,0.85);
             margin-left: 4px;
+        }
+        .warikan-result .result-sub {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.7);
+            margin-top: 6px;
+            font-weight: 700;
         }
 
         /* ---- 長押しチェック アニメーション ---- */
@@ -724,38 +737,37 @@
 <div id="tab-warikan" class="tab-panel hidden">
     <div class="warikan-wrap">
 
-        <!-- 購入金額追加 -->
+        <!-- 合計金額入力 -->
         <div class="warikan-card">
-            <div class="warikan-label">💴 支払い金額を追加</div>
-            <div class="amount-add-row">
-                <input type="number" class="amount-add-input" id="new-amount"
+            <div class="warikan-label">💴 合計金額</div>
+            <div class="total-input-row">
+                <input type="number" class="total-amount-input" id="total-amount"
                     placeholder="0" min="0" inputmode="numeric">
-                <span class="amount-yen">円</span>
-                <button class="amount-add-btn" onclick="addEntry()">追加</button>
-            </div>
-            <div class="amount-list" id="amount-entries"></div>
-            <hr class="entries-divider">
-            <div class="entries-total-row">
-                <span class="total-label">合計</span>
-                <span class="entries-total-num" id="entries-total">0</span>
-                <span class="entry-yen">円</span>
+                <span class="total-yen">円</span>
             </div>
         </div>
 
-        <!-- 人数 -->
+        <!-- 立替者選択 -->
         <div class="warikan-card">
-            <div class="warikan-label">👥 割り勘人数</div>
-            <div class="spinner-row">
-                <button class="spin-btn" id="people-minus">－</button>
-                <div class="spin-count" id="people-count">1</div>
-                <button class="spin-btn" id="people-plus">＋</button>
+            <div class="warikan-label">👤 立替者を選択</div>
+            <div class="payer-select-wrap" id="payer-chips">
+                <span class="payer-no-participants">参加者を読み込み中…</span>
             </div>
         </div>
 
-        <!-- 結果 -->
+        <!-- 1人あたり -->
         <div class="warikan-result">
             <div class="result-label">1人あたり</div>
             <div><span class="result-num" id="per-person">0</span><span class="result-yen">円</span></div>
+            <div class="result-sub" id="result-sub"></div>
+        </div>
+
+        <!-- 精算リスト -->
+        <div class="warikan-card">
+            <div class="warikan-label">━━ 精算リスト ━━</div>
+            <div class="settlement-list" id="settlement-list">
+                <div class="settlement-empty">合計金額と立替者を選択してください</div>
+            </div>
         </div>
 
     </div>
@@ -882,6 +894,11 @@ function renderParticipants() {
         tagsEl.innerHTML = participants.map(n =>
             `<span class="participant-tag ${n === myName ? 'me' : ''}">${esc(n)}</span>`
         ).join('');
+    }
+    // 割り勘タブが表示中なら精算リストも更新
+    if (!document.getElementById('tab-warikan').classList.contains('hidden')) {
+        renderPayerChips();
+        calcSettlement();
     }
 }
 
@@ -1088,108 +1105,154 @@ function switchTab(tab) {
     document.getElementById('tab-warikan').classList.toggle('hidden', tab !== 'warikan');
     document.getElementById('tab-btn-list').classList.toggle('active', tab === 'list');
     document.getElementById('tab-btn-warikan').classList.toggle('active', tab === 'warikan');
-    if (tab === 'warikan' && !window._peopleManualSet) {
-        peopleCount = Math.max(participants.length, 1);
-        document.getElementById('people-count').textContent = peopleCount;
-        calcWarikan();
+    if (tab === 'warikan') {
+        renderPayerChips();
+        calcSettlement();
     }
 }
 
-// ========== 割り勘・金額追加 ==========
-// entries = [{ who: "太郎", amount: 3000 }, ...]
-let amountEntries = [];
-let peopleCount   = 1;
+// ========== 割り勘・Walica風立て替え精算 ==========
+let selectedPayer = '';
 let _isOwnSave    = false;
 
+// 合計金額をSupabaseから読み込む
 async function loadAmountEntries() {
     if (_isOwnSave) return;
     const { data } = await sb.from(TABLE_CONFIG)
-        .select('value').eq('key', 'amount_entries').maybeSingle();
+        .select('value').eq('key', 'total_amount').maybeSingle();
     if (data && data.value) {
-        try {
-            const parsed = JSON.parse(data.value);
-            if (Array.isArray(parsed)) amountEntries = parsed;
-        } catch(e) {}
+        const el = document.getElementById('total-amount');
+        if (el && !el._userEditing) el.value = data.value;
     }
-    renderEntries();
+    calcSettlement();
 }
 
-async function saveAmountEntries() {
+// 合計金額をSupabaseに保存
+async function saveTotalAmount(amount) {
     _isOwnSave = true;
     await sb.from(TABLE_CONFIG).upsert({
-        key: 'amount_entries',
-        value: JSON.stringify(amountEntries)
+        key: 'total_amount',
+        value: String(amount)
     });
     setTimeout(() => { _isOwnSave = false; }, 1200);
 }
 
-function renderEntries() {
-    const container = document.getElementById('amount-entries');
-    if (!container) return;
+// 立替者チップを描画
+function renderPayerChips() {
+    const wrap = document.getElementById('payer-chips');
+    if (!wrap) return;
 
-    if (amountEntries.length === 0) {
-        container.innerHTML = '<div class="amount-empty">まだ追加されていません</div>';
-    } else {
-        container.innerHTML = amountEntries.map((e, i) => `
-            <div class="amount-entry">
-                <span class="amount-entry-who">${esc(e.who || '?')}</span>
-                <span class="amount-entry-val">${Number(e.amount).toLocaleString()} 円</span>
-                ${e.who === myName
-                    ? `<button class="amount-entry-del" onclick="removeEntry(${i})">✕</button>`
-                    : ''}
-            </div>
-        `).join('');
+    if (participants.length === 0) {
+        wrap.innerHTML = '<span class="payer-no-participants">参加者がいません。まず参加者登録してください。</span>';
+        return;
     }
-    calcWarikan();
+
+    // selectedPayerが未設定ならmyNameをデフォルトに
+    if (!selectedPayer && participants.includes(myName)) {
+        selectedPayer = myName;
+    } else if (!selectedPayer && participants.length > 0) {
+        selectedPayer = participants[0];
+    }
+
+    wrap.innerHTML = participants.map((name, i) => `
+        <button class="payer-chip ${name === selectedPayer ? 'selected' : ''}"
+            data-payer-index="${i}">${esc(name)}</button>
+    `).join('');
+
+    // イベント委任でクリック処理（名前のシングルクォート対策）
+    wrap.onclick = (e) => {
+        const chip = e.target.closest('.payer-chip');
+        if (!chip) return;
+        const idx = parseInt(chip.dataset.payerIndex);
+        if (!isNaN(idx) && participants[idx]) selectPayer(participants[idx]);
+    };
 }
 
-async function addEntry() {
-    const input  = document.getElementById('new-amount');
-    const amount = parseInt(input.value);
-    if (!amount || amount <= 0) { input.focus(); return; }
-    if (!myName) { showNameModal(); return; }
-
-    amountEntries.push({ who: myName, amount });
-    input.value = '';
-    input.focus();
-    renderEntries();
-    await saveAmountEntries();
+function selectPayer(name) {
+    selectedPayer = name;
+    renderPayerChips();
+    calcSettlement();
 }
 
-async function removeEntry(index) {
-    amountEntries.splice(index, 1);
-    renderEntries();
-    await saveAmountEntries();
-}
+// 精算リストを計算・描画
+function calcSettlement() {
+    const totalInput = document.getElementById('total-amount');
+    const total = totalInput ? (parseInt(totalInput.value) || 0) : 0;
+    const count = participants.length;
+    const perPerson = count > 0 ? Math.ceil(total / count) : 0;
 
-function calcWarikan() {
-    const total = amountEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    const totalEl = document.getElementById('entries-total');
-    if (totalEl) totalEl.textContent = total.toLocaleString();
-    const per = peopleCount > 0 ? Math.ceil(total / peopleCount) : 0;
+    // 1人あたり表示
     const perEl = document.getElementById('per-person');
-    if (perEl) perEl.textContent = per.toLocaleString();
+    if (perEl) perEl.textContent = perPerson.toLocaleString();
+
+    // サブテキスト
+    const subEl = document.getElementById('result-sub');
+    if (subEl) {
+        subEl.textContent = count > 0 ? `${count}人で割り勘` : '';
+    }
+
+    // 精算リスト
+    const listEl = document.getElementById('settlement-list');
+    if (!listEl) return;
+
+    if (total === 0 || !selectedPayer || count === 0) {
+        listEl.innerHTML = '<div class="settlement-empty">合計金額と立替者を選択してください</div>';
+        return;
+    }
+
+    const others = participants.filter(n => n !== selectedPayer);
+    const receiveTotal = others.length * perPerson;
+
+    let html = '';
+
+    // 支払う人たちの行
+    others.forEach(name => {
+        html += `
+        <div class="settlement-row">
+            <span class="settlement-avatar">🙋</span>
+            <div class="settlement-info">
+                <div class="settlement-name">${esc(name)}</div>
+                <div class="settlement-arrow">→ <span class="settlement-payer-name">${esc(selectedPayer)}</span> に支払う</div>
+            </div>
+            <div>
+                <span class="settlement-amount">${perPerson.toLocaleString()}</span>
+                <span class="settlement-yen">円</span>
+            </div>
+        </div>`;
+    });
+
+    // 立替者の受け取り行
+    html += `
+    <div class="payer-receive-row">
+        <span class="settlement-avatar">💰</span>
+        <div class="payer-receive-info">
+            <div class="payer-receive-name">${esc(selectedPayer)}（立替者）が受け取る</div>
+            <div class="payer-receive-sub">自己負担: ${perPerson.toLocaleString()}円</div>
+        </div>
+        <div>
+            <span class="payer-receive-amount">${receiveTotal.toLocaleString()}</span>
+            <span class="settlement-yen">円</span>
+        </div>
+    </div>`;
+
+    listEl.innerHTML = html;
 }
 
-// Enterキーで追加
-document.getElementById('new-amount').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addEntry();
-});
-
-// ========== 人数スピナー ==========
-document.getElementById('people-minus').addEventListener('click', () => {
-    if (peopleCount <= 1) return;
-    peopleCount--;
-    window._peopleManualSet = true;
-    document.getElementById('people-count').textContent = peopleCount;
-    calcWarikan();
-});
-document.getElementById('people-plus').addEventListener('click', () => {
-    peopleCount++;
-    window._peopleManualSet = true;
-    document.getElementById('people-count').textContent = peopleCount;
-    calcWarikan();
-});
+// 合計金額入力イベント
+const totalAmountInput = document.getElementById('total-amount');
+if (totalAmountInput) {
+    totalAmountInput._userEditing = false;
+    totalAmountInput.addEventListener('focus', () => { totalAmountInput._userEditing = true; });
+    totalAmountInput.addEventListener('blur', async () => {
+        totalAmountInput._userEditing = false;
+        const v = parseInt(totalAmountInput.value) || 0;
+        calcSettlement();
+        await saveTotalAmount(v);
+    });
+    totalAmountInput.addEventListener('input', () => {
+        calcSettlement();
+    });
+}
 </script>
 </body>
 </html>
