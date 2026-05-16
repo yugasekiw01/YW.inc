@@ -875,7 +875,7 @@ sb.channel('config-changes')
 
 load();
 loadParticipants();
-loadAmountEntries();
+loadAmountEntries(true); // ページロード時は強制読み込み
 
 // ========== 接続ステータス ==========
 function setConn(online) {
@@ -1116,11 +1116,13 @@ let selectedPayer = '';
 let _isOwnSave    = false;
 
 // 合計金額をSupabaseから読み込む
-async function loadAmountEntries() {
-    if (_isOwnSave) return;
+// forceLoad=true のときは _isOwnSave を無視して強制読み込み（ページロード時用）
+async function loadAmountEntries(forceLoad = false) {
+    if (!forceLoad && _isOwnSave) return;
     const { data } = await sb.from(TABLE_CONFIG)
         .select('value').eq('key', 'total_amount').maybeSingle();
-    if (data && data.value) {
+    // data.value が "0" や空文字でも正しく反映する（null/undefined のみ除外）
+    if (data && data.value != null) {
         const el = document.getElementById('total-amount');
         if (el && !el._userEditing) el.value = data.value;
     }
