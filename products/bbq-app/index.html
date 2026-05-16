@@ -1120,32 +1120,51 @@ let _isOwnSave    = false;
 async function loadAmountEntries(forceLoad = false) {
     if (!forceLoad && _isOwnSave) return;
 
-    // まずlocalStorageから即反映（ちらつき防止）
-    const local = localStorage.getItem('bbq_total_amount');
     const el = document.getElementById('total-amount');
-    if (local != null && el && !el._userEditing) {
-        el.value = local;
-        calcSettlement();
-    }
 
-    // Supabaseからも読み込んで上書き
+    // Supabaseから読み込む
     const { data } = await sb.from(TABLE_CONFIG)
         .select('value').eq('key', 'total_amount').maybeSingle();
-    if (data && data.value != null) {
-        if (el && !el._userEditing) el.value = data.value;
-        localStorage.setItem('bbq_total_amount', data.value);
+
+    // 0以外の有効な値がある場合のみ反映（0は「未設定」として扱う）
+    if (data && data.value != null && data.value !== '0' && data.value !== '') {
+        const numVal = parseInt(data.value);
+        if (!isNaN(numVal) && numVal > 0) {
+            if (el && !el._userEditing) el.value = data.value;
+            localStorage.setItem('bbq_total_amount', data.value);
+            calcSettlement();
+            return;
+        }
+    }
+
+    // Supabaseに有効な値がなければlocalStorageをフォールバックとして使用
+    const local = localStorage.getItem('bbq_total_amount');
+    if (local != null && local !== '0' && local !== '' && el && !el._userEditing) {
+        const numLocal = parseInt(local);
+        if (!isNaN(numLocal) && numLocal > 0) {
+            el.value = local;
+        }
     }
     calcSettlement();
 }
 
-// 合計金額をSupabaseに保存
+// 合計金額をSupabaseに保存（0は保存しない）
 async function saveTotalAmount(amount) {
     _isOwnSave = true;
-    localStorage.setItem('bbq_total_amount', String(amount));
-    await sb.from(TABLE_CONFIG).upsert(
-        { key: 'total_amount', value: String(amount) },
-        { onConflict: 'key' }
-    );
+    if (amount > 0) {
+        localStorage.setItem('bbq_total_amount', String(amount));
+        await sb.from(TABLE_CONFIG).upsert(
+            { key: 'total_amount', value: String(amount) },
+            { onConflict: 'key' }
+        );
+    } else {
+        // 0の場合はlocalStorageとSupabaseをクリア
+        localStorage.removeItem('bbq_total_amount');
+        await sb.from(TABLE_CONFIG).upsert(
+            { key: 'total_amount', value: '' },
+            { onConflict: 'key' }
+        );
+    }
     setTimeout(() => { _isOwnSave = false; }, 1200);
 }
 
