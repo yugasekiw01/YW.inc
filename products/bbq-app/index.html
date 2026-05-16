@@ -147,16 +147,156 @@
             padding: 4px 12px;
             font-size: 0.82rem;
             font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
         .participant-tag.me {
             background: #FF9F43;
             border-color: #FF9F43;
             color: white;
+            cursor: pointer;
         }
         .no-participants {
             font-size: 0.82rem;
             color: #CCC;
             font-weight: 700;
+        }
+
+        /* ---- 参加者タグ 削除ボタン ---- */
+        .participant-tag-remove {
+            background: none;
+            border: none;
+            color: #FFCC99;
+            font-size: 0.7rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            font-weight: 800;
+            transition: color 0.18s;
+        }
+        .participant-tag-remove:hover { color: #FF6B6B; }
+
+        /* ---- 参加者追加ボタン ---- */
+        .participant-add-btn {
+            background: #FFF5E6;
+            border: 2px dashed #FFE0CC;
+            color: #FF9F43;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .participant-add-btn:hover { background: #FFE8CC; border-color: #FF9F43; }
+
+        /* ---- 参加者追加インライン入力 ---- */
+        .participant-add-form {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .participant-add-form.hidden { display: none; }
+        .participant-name-input {
+            border: 2px solid #FFE0CC;
+            border-radius: 12px;
+            padding: 6px 12px;
+            font-size: 0.88rem;
+            font-family: inherit;
+            outline: none;
+            background: #FFFAF7;
+            flex: 1;
+            font-weight: 700;
+        }
+        .participant-name-input:focus { border-color: #FF6B6B; box-shadow: 0 0 0 2px rgba(255,107,107,0.15); }
+        .participant-name-confirm {
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 7px 14px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .participant-name-cancel {
+            background: #F0F0F0;
+            color: #999;
+            border: none;
+            border-radius: 10px;
+            padding: 7px 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* ---- 名前変更モーダル ---- */
+        .rename-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 110;
+            padding: 20px;
+        }
+        .rename-modal.hidden { display: none; }
+        .rename-modal-box {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .rename-modal-box .icon { font-size: 3rem; margin-bottom: 12px; }
+        .rename-modal-box h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+        .rename-modal-box p  { font-size: 0.85rem; color: #999; margin-bottom: 18px; }
+        .rename-input {
+            border: 2px solid #FFE0CC;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+            margin-bottom: 12px;
+            text-align: center;
+            font-weight: 700;
+        }
+        .rename-input:focus { border-color: #FF6B6B; }
+        .rename-submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 1rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .rename-cancel-btn {
+            width: 100%;
+            background: #F0F0F0;
+            color: #999;
+            border: none;
+            border-radius: 12px;
+            padding: 11px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
         }
 
         /* ---- プログレスバー ---- */
@@ -817,6 +957,12 @@
     <div class="participant-tags" id="participant-tags">
         <span class="no-participants">まだ誰もいません</span>
     </div>
+    <div class="participant-add-form hidden" id="participant-add-form">
+        <input type="text" class="participant-name-input" id="participant-name-input"
+            placeholder="名前を入力" maxlength="10" autocomplete="off" />
+        <button class="participant-name-confirm" id="participant-name-confirm">追加</button>
+        <button class="participant-name-cancel" id="participant-name-cancel">✕</button>
+    </div>
 </div>
 
 <div class="progress-wrap">
@@ -889,6 +1035,18 @@
             </div>
         </div>
 
+    </div>
+</div>
+
+<!-- 名前変更モーダル -->
+<div class="rename-modal hidden" id="rename-modal">
+    <div class="rename-modal-box">
+        <div class="icon">✏️</div>
+        <h2>名前を変更</h2>
+        <p>新しい名前を入力してください</p>
+        <input type="text" class="rename-input" id="rename-input" placeholder="新しい名前" maxlength="10" autocomplete="off" />
+        <button class="rename-submit-btn" id="rename-submit-btn">変更する</button>
+        <button class="rename-cancel-btn" id="rename-cancel-btn">キャンセル</button>
     </div>
 </div>
 
@@ -1008,11 +1166,17 @@ function renderParticipants() {
     document.getElementById('participant-count').textContent = participants.length;
     const tagsEl = document.getElementById('participant-tags');
     if (participants.length === 0) {
-        tagsEl.innerHTML = '<span class="no-participants">まだ誰もいません</span>';
+        tagsEl.innerHTML = '<span class="no-participants">まだ誰もいません</span><button class="participant-add-btn" onclick="showParticipantAddForm()">＋ 追加</button>';
     } else {
-        tagsEl.innerHTML = participants.map(n =>
-            `<span class="participant-tag ${n === myName ? 'me' : ''}">${esc(n)}</span>`
-        ).join('');
+        const tags = participants.map(n => {
+            if (n === myName) {
+                return `<span class="participant-tag me" onclick="showRenameModal()" title="タップで名前変更">${esc(n)}（自分）</span>`;
+            } else {
+                return `<span class="participant-tag">${esc(n)}<button class="participant-tag-remove" onclick="removeParticipant('${esc(n)}')" title="削除">✕</button></span>`;
+            }
+        });
+        tags.push(`<button class="participant-add-btn" onclick="showParticipantAddForm()">＋ 追加</button>`);
+        tagsEl.innerHTML = tags.join('');
     }
     // 割り勘タブが表示中なら精算リストも更新
     if (!document.getElementById('tab-warikan').classList.contains('hidden')) {
@@ -1560,6 +1724,93 @@ function calcSettlement() {
 document.getElementById('wf-add-btn').addEventListener('click', addWarikanEntry);
 document.getElementById('wf-amount').addEventListener('keydown', e => {
     if (e.key === 'Enter') addWarikanEntry();
+});
+
+// ========== 参加者の追加フォーム ==========
+function showParticipantAddForm() {
+    const form = document.getElementById('participant-add-form');
+    form.classList.remove('hidden');
+    const input = document.getElementById('participant-name-input');
+    input.value = '';
+    setTimeout(() => input.focus(), 50);
+}
+
+function hideParticipantAddForm() {
+    document.getElementById('participant-add-form').classList.add('hidden');
+    document.getElementById('participant-name-input').value = '';
+}
+
+async function confirmAddParticipant() {
+    const input = document.getElementById('participant-name-input');
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    if (participants.includes(name)) {
+        alert('その名前はすでに登録されています');
+        input.focus();
+        return;
+    }
+    await sb.from(TABLE_PEOPLE).upsert({ name }, { onConflict: 'name' });
+    hideParticipantAddForm();
+}
+
+document.getElementById('participant-name-confirm').addEventListener('click', confirmAddParticipant);
+document.getElementById('participant-name-cancel').addEventListener('click', hideParticipantAddForm);
+document.getElementById('participant-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmAddParticipant();
+    if (e.key === 'Escape') hideParticipantAddForm();
+});
+
+// ========== 参加者の削除 ==========
+async function removeParticipant(name) {
+    if (!confirm(`「${name}」を参加者から削除しますか？`)) return;
+    await sb.from(TABLE_PEOPLE).delete().eq('name', name);
+}
+
+// ========== 名前変更モーダル ==========
+function showRenameModal() {
+    const modal = document.getElementById('rename-modal');
+    const input = document.getElementById('rename-input');
+    input.value = myName;
+    modal.classList.remove('hidden');
+    setTimeout(() => { input.focus(); input.select(); }, 100);
+}
+
+function hideRenameModal() {
+    document.getElementById('rename-modal').classList.add('hidden');
+}
+
+async function submitRename() {
+    const input = document.getElementById('rename-input');
+    const newName = input.value.trim();
+    if (!newName) { input.focus(); return; }
+    if (newName === myName) { hideRenameModal(); return; }
+    if (participants.includes(newName)) {
+        alert('その名前はすでに使われています');
+        input.focus();
+        return;
+    }
+
+    const oldName = myName;
+
+    // localStorageとmyName更新
+    myName = newName;
+    localStorage.setItem('bbq_user_name', myName);
+    hideRenameModal();
+
+    // Supabase: 古い名前削除 → 新しい名前insert
+    await sb.from(TABLE_PEOPLE).delete().eq('name', oldName);
+    await sb.from(TABLE_PEOPLE).upsert({ name: newName }, { onConflict: 'name' });
+
+    // 画面を再描画（リアルタイムで来るが念のため手動更新）
+    participants = participants.map(n => n === oldName ? newName : n);
+    renderParticipants();
+}
+
+document.getElementById('rename-submit-btn').addEventListener('click', submitRename);
+document.getElementById('rename-cancel-btn').addEventListener('click', hideRenameModal);
+document.getElementById('rename-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitRename();
+    if (e.key === 'Escape') hideRenameModal();
 });
 </script>
 </body>
