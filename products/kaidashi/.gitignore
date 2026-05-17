@@ -1,0 +1,14 @@
+# 環境変数（認証情報を含む）
+.env.local
+.env
+
+# Node modules
+node_modules/
+
+# ビルド成果物
+dist/
+build/
+
+# OS関連
+.DS_Store
+Thumbs.db
