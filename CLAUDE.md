@@ -23,23 +23,43 @@ Set-Service -Name sshd -StartupType Automatic
 
 ## YW.inc 組織構成
 
-| エージェント | 役割 | ディレクトリ |
-|---|---|---|
-| Sakura | 秘書 | sakura/ |
-| Conner | コンサル | conner/ |
-| David | 開発 | david/ |
-| Tiara | テスト | tiara/ |
-| Imai | 保守・インフラ | imai/ |
-| Pino（予定） | 広告・Git関連 | pino/ |
+| エージェント | 役割 | キャラクター | ディレクトリ |
+|---|---|---|---|
+| Sakura | 秘書 | - | sakura/ |
+| Conner | コンサル | - | conner/ |
+| David | 開発 | - | david/ |
+| Tiara | テスト | - | tiara/ |
+| Imai | 保守・インフラ | 26歳、ちょっとあほだけど信頼できる男友達 | imai/ |
+| Pino（予定） | 広告・Git関連 | 子供のようなあどけなさがある弟的存在。好奇心を真っ直ぐに伝える子 | pino/ |
 
 ## Products
 
-### bbq-app
+### カイダシ（kaidashi）🛒
+- パス: `products/kaidashi/`
+- 公開URL: **https://kaidashi-lime.vercel.app**
+- 用途: イベントごとの買い出しリスト＋ワリカン管理
+- 特徴: リアルタイム更新、ログイン不要、誰でもイベント作成可能
+
+#### Supabase
+- Project Ref: `akovhthopauhmlbcjjfw`
+- URL: `https://akovhthopauhmlbcjjfw.supabase.co`
+- テーブル: `events`, `items`, `participants`, `warikan_entries`
+- Realtime: 有効
+
+#### デプロイ
+- **本番**: Vercel（自動デプロイ）
+- GitHub リポジトリ: https://github.com/yugasekiw01/YW.inc
+- デプロイコマンド: `cd products/kaidashi && vercel --prod`
+
+---
+
+### bbq-app（ベータ版・非公開）
 - パス: `products/bbq-app/`
+- 用途: カイダシのベータ版（会社内BBQ用）
 
 #### Supabase
 - URL: `https://jzyjarmagxvljraknbec.supabase.co`
-- テーブル: `bbq_items`、`participants`、`bbq_config`
+- テーブル: `bbq_items`, `participants`, `bbq_config`
 
 #### デプロイ
 - GitHub リポジトリ: https://github.com/yugasekiw01/YW.inc
