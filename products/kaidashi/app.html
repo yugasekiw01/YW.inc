@@ -588,7 +588,7 @@ if (!EVENT_CODE) location.href = 'index.html';
     <div class="name-modal-box">
         <div class="icon">👤</div>
         <h2>あなたの名前は？</h2>
-        <p>✋ボタンで欲しいものに挙手できます</p>
+        <p>✋ ホシイ！ボタンで欲しいものに投票できます</p>
         <input type="text" class="name-input" id="name-input" placeholder="名前を入力" maxlength="10" autocomplete="off" />
         <button class="name-submit-btn" id="name-submit-btn">決定！</button>
     </div>
@@ -724,7 +724,7 @@ function render() {
                     <div class="hold-ring"></div>
                 </div>
                 <div class="item-info"><div class="item-name">${esc(item.name)}</div>${checkerHtml}${votersHtml}</div>
-                <button class="vote-btn ${voted?'voted':''}" onclick="voteItem('${esc(item.id)}')">✋${voters.length?' '+voters.length:''}</button>
+                <button class="vote-btn ${voted?'voted':''}" onclick="voteItem('${esc(item.id)}')">✋ ホシイ！${voters.length?' '+voters.length:''}</button>
                 ${canDelete?`<button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>`:''}
             </div>`;
         });
