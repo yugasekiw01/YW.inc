@@ -45,6 +45,26 @@
             margin-top: 6px;
             position: relative;
         }
+        /* 戻るリンク */
+        .header-back {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.18s;
+            z-index: 1;
+        }
+        .header-back:hover { background: rgba(255,255,255,0.4); }
 
         /* ---- 追加フォーム ---- */
         .add-form {
@@ -797,7 +817,7 @@
             font-weight: 700;
         }
 
-        /* ---- チェックボックス ---- */
+        /* ---- 長押しチェック アニメーション ---- */
         .checkbox-wrap {
             position: relative;
             display: flex;
@@ -808,54 +828,47 @@
             flex-shrink: 0;
             cursor: pointer;
             border-radius: 50%;
-            transition: background 0.15s, transform 0.1s;
+            transition: background 0.15s;
         }
-        .checkbox-wrap:hover { background: rgba(255,107,107,0.08); }
-        .checkbox-wrap:active { background: rgba(255,107,107,0.18); transform: scale(0.92); }
+        .checkbox-wrap:active { background: rgba(255,107,107,0.12); }
+        .hold-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            pointer-events: none;
+        }
+        .checkbox-wrap.holding .hold-ring {
+            border-color: #FF6B6B;
+            animation: fillRing 0.5s linear forwards;
+        }
+        @keyframes fillRing {
+            0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
+            100% { clip-path: inset(0 0% 0 0);   opacity: 1; }
+        }
 
-        /* ---- Undo トースト ---- */
-        .undo-toast {
+        /* 長押しヒントトースト */
+        .hold-hint {
             position: fixed;
             bottom: 70px;
             left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: #333;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(0,0,0,0.72);
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.82rem;
             font-weight: 700;
-            padding: 12px 16px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            padding: 8px 18px;
+            border-radius: 20px;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.25s, transform 0.25s;
-            z-index: 300;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 200;
+            white-space: nowrap;
         }
-        .undo-toast.show {
+        .hold-hint.show {
             opacity: 1;
-            pointer-events: auto;
             transform: translateX(-50%) translateY(0);
         }
-        .undo-toast-msg {
-            flex: 1;
-        }
-        .undo-toast-btn {
-            background: #FF9F43;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 0.88rem;
-            font-weight: 800;
-            font-family: inherit;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .undo-toast-btn:hover { background: #FF6B6B; }
-        .undo-toast-btn:active { transform: scale(0.95); }
 
         /* ---- 精算フィルターチップ ---- */
         .settlement-filter-chips {
@@ -942,12 +955,84 @@
             display: none;
         }
         .error-banner.visible { display: block; }
+
+        /* ---- イベント無効 ---- */
+        .invalid-event {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 24px;
+            text-align: center;
+        }
+        .invalid-event .icon { font-size: 4rem; margin-bottom: 16px; }
+        .invalid-event h2 { font-size: 1.3rem; font-weight: 800; color: #555; margin-bottom: 8px; }
+        .invalid-event p  { font-size: 0.9rem; color: #AAA; font-weight: 700; margin-bottom: 24px; }
+        .btn-home {
+            background: linear-gradient(135deg, #FF6B6B, #FF9F43);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        /* ---- URLシェアボタン ---- */
+        .share-btn {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.18s;
+            z-index: 1;
+        }
+        .share-btn:hover { background: rgba(255,255,255,0.4); }
     </style>
 </head>
 <body>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ========== イベントコードを URL から取得 ==========
+const urlParams    = new URLSearchParams(location.search);
+const EVENT_CODE   = urlParams.get('event');
+
+if (!EVENT_CODE) {
+    // イベントコードがない場合はランディングページへ
+    location.href = 'index.html';
+}
+</script>
+
+<!-- イベント無効時の表示（JSで制御） -->
+<div id="invalid-screen" class="invalid-event hidden">
+    <div class="icon">🔍</div>
+    <h2>イベントが見つかりません</h2>
+    <p>URLが間違っているか、イベントが存在しません</p>
+    <a class="btn-home" href="index.html">トップページへ戻る</a>
+</div>
+
+<!-- メインコンテンツ（イベント確認後に表示） -->
+<div id="main-content" class="hidden">
+
 <header>
+    <a class="header-back" href="index.html">← トップ</a>
     <h1>🔥 BBQ 買い出しリスト</h1>
+    <p id="event-name-display">読み込み中…</p>
+    <button class="share-btn" onclick="shareEvent()">🔗 共有</button>
 </header>
 
 <div class="tabs">
@@ -1093,13 +1178,11 @@
     </div>
 </div>
 
-<div class="undo-toast" id="undo-toast">
-    <span class="undo-toast-msg" id="undo-toast-msg"></span>
-    <button class="undo-toast-btn" onclick="undoLastAction()">戻す</button>
-</div>
+<div class="hold-hint" id="hold-hint">長押しでチェック ✓</div>
 <div class="conn-status online" id="conn-status">● オンライン</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</div><!-- /main-content -->
+
 <script>
 const SUPABASE_URL      = 'https://jzyjarmagxvljraknbec.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6eWphcm1hZ3h2bGpyYWtuYmVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4Mjc3NDcsImV4cCI6MjA5NDQwMzc0N30.a-V8AikYHUX2axRF22a1ZnpI6c1RKVOogK7mIxLLYAU';
@@ -1111,12 +1194,92 @@ const TABLE          = 'bbq_items';
 const TABLE_PEOPLE   = 'participants';
 const TABLE_CONFIG   = 'bbq_config';
 const TABLE_WARIKAN  = 'warikan_entries';
+const TABLE_EVENTS   = 'events';
 const CATEGORIES     = ['肉', '野菜・果物', '飲み物', '炭水化物', '調味料・その他'];
-const CAT_ICONS    = { '肉':'🥩', '野菜・果物':'🥦', '飲み物':'🍺', '炭水化物':'🍞', '調味料・その他':'🧂' };
+const CAT_ICONS      = { '肉':'🥩', '野菜・果物':'🥦', '飲み物':'🍺', '炭水化物':'🍞', '調味料・その他':'🧂' };
 
 let items        = [];
 let participants = [];
 let myName       = localStorage.getItem('bbq_user_name') || '';
+let eventId      = null;   // Supabase の events.id (UUID)
+let eventName    = '';
+
+// ========== イベント初期化 ==========
+async function initEvent() {
+    // events テーブルから event_code で検索
+    const { data, error } = await sb
+        .from(TABLE_EVENTS)
+        .select('id, name')
+        .eq('event_code', EVENT_CODE)
+        .single();
+
+    if (error || !data) {
+        // イベントが存在しない
+        document.getElementById('invalid-screen').classList.remove('hidden');
+        return;
+    }
+
+    eventId   = data.id;
+    eventName = data.name;
+
+    // ページタイトルとヘッダーを更新
+    document.title = `🔥 ${eventName}`;
+    document.getElementById('event-name-display').textContent = eventName;
+
+    // 最近のイベントに保存
+    saveRecentEvent(EVENT_CODE, eventName);
+
+    // メインコンテンツを表示
+    document.getElementById('main-content').classList.remove('hidden');
+
+    // 名前モーダル
+    if (!myName) {
+        showNameModal();
+    } else {
+        sb.from(TABLE_PEOPLE)
+            .upsert({ name: myName, event_id: eventId }, { onConflict: 'name,event_id' })
+            .then(({ error }) => { if (error) console.error('upsert error:', error); });
+    }
+
+    // リアルタイム購読
+    sb.channel(`bbq-changes-${EVENT_CODE}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE,
+            filter: `event_id=eq.${eventId}` }, () => load())
+        .subscribe(status => setConn(status === 'SUBSCRIBED'));
+
+    sb.channel(`participants-changes-${EVENT_CODE}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_PEOPLE,
+            filter: `event_id=eq.${eventId}` }, () => loadParticipants())
+        .subscribe();
+
+    sb.channel(`warikan-changes-${EVENT_CODE}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_WARIKAN,
+            filter: `event_id=eq.${eventId}` }, () => loadAmountEntries())
+        .subscribe();
+
+    // 初期データ読み込み
+    await Promise.all([load(), loadParticipants(), loadAmountEntries()]);
+}
+
+// ========== 最近のイベント保存 ==========
+function saveRecentEvent(code, name) {
+    const recent = JSON.parse(localStorage.getItem('bbq_recent_events') || '[]');
+    const filtered = recent.filter(ev => ev.code !== code);
+    filtered.unshift({ code, name });
+    localStorage.setItem('bbq_recent_events', JSON.stringify(filtered.slice(0, 10)));
+}
+
+// ========== URLシェア ==========
+function shareEvent() {
+    const url = location.href;
+    if (navigator.share) {
+        navigator.share({ title: `🔥 ${eventName}`, url });
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('URLをコピーしました！');
+        });
+    }
+}
 
 // ========== 名前モーダル ==========
 function showNameModal() {
@@ -1132,18 +1295,15 @@ async function submitName() {
     myName = val;
     localStorage.setItem('bbq_user_name', myName);
     hideNameModal();
-    await sb.from(TABLE_PEOPLE).upsert({ name: myName }, { onConflict: 'name' });
+    await sb.from(TABLE_PEOPLE).upsert(
+        { name: myName, event_id: eventId },
+        { onConflict: 'name,event_id' }
+    );
 }
 document.getElementById('name-submit-btn').addEventListener('click', submitName);
 document.getElementById('name-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') submitName();
 });
-if (!myName) {
-    showNameModal();
-} else {
-    sb.from(TABLE_PEOPLE).upsert({ name: myName }, { onConflict: 'name' })
-        .then(({ error }) => { if (error) console.error('upsert error:', error); });
-}
 
 // ========== ユーティリティ ==========
 function esc(s) {
@@ -1154,9 +1314,11 @@ function esc(s) {
 
 // ========== データ読み込み ==========
 async function load() {
+    if (!eventId) return;
     const { data, error } = await sb
         .from(TABLE)
         .select('*')
+        .eq('event_id', eventId)
         .order('created_at', { ascending: true });
     if (error) { setConn(false); return; }
     items = data;
@@ -1165,30 +1327,17 @@ async function load() {
 }
 
 async function loadParticipants() {
-    const { data, error } = await sb.from(TABLE_PEOPLE).select('name');
+    if (!eventId) return;
+    const { data, error } = await sb
+        .from(TABLE_PEOPLE)
+        .select('name')
+        .eq('event_id', eventId);
     if (error) { console.error('participants load error:', error); return; }
     if (data) {
         participants = data.map(r => r.name);
         renderParticipants();
     }
 }
-
-// ========== リアルタイム ==========
-sb.channel('bbq-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE }, () => load())
-    .subscribe(status => setConn(status === 'SUBSCRIBED'));
-
-sb.channel('participants-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_PEOPLE }, () => loadParticipants())
-    .subscribe();
-
-sb.channel('warikan-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_WARIKAN }, () => loadAmountEntries())
-    .subscribe();
-
-load();
-loadParticipants();
-loadAmountEntries();
 
 // ========== 接続ステータス ==========
 function setConn(online) {
@@ -1214,7 +1363,6 @@ function renderParticipants() {
         tags.push(`<button class="participant-add-btn" onclick="showParticipantAddForm()">＋ 追加</button>`);
         tagsEl.innerHTML = tags.join('');
     }
-    // 割り勘タブが表示中なら精算リストも更新
     if (!document.getElementById('tab-warikan').classList.contains('hidden')) {
         renderWarikanUI();
     }
@@ -1298,10 +1446,18 @@ function render() {
                 : '';
             html += `
             <div class="item ${item.checked ? 'checked' : ''}" data-cat="${esc(item.category)}">
-                <div class="checkbox-wrap" onclick="toggleItemWithUndo('${esc(item.id)}', ${item.checked}, '${esc(item.name)}')">
+                <div class="checkbox-wrap"
+                    data-id="${esc(item.id)}"
+                    onmousedown="startHold(event, '${esc(item.id)}', ${item.checked})"
+                    ontouchstart="startHold(event, '${esc(item.id)}', ${item.checked})"
+                    onmouseup="cancelHold(event)"
+                    onmouseleave="cancelHold(event)"
+                    ontouchend="cancelHold(event)"
+                    ontouchcancel="cancelHold(event)">
                     <input type="checkbox" class="item-checkbox"
                         ${item.checked ? 'checked' : ''}
                         style="pointer-events:none;">
+                    <div class="hold-ring"></div>
                 </div>
                 <div class="item-info">
                     <div class="item-name">${esc(item.name)}</div>
@@ -1323,13 +1479,18 @@ function render() {
 // ========== アイテム追加 ==========
 const addBtn = document.getElementById('add-btn');
 async function addItem() {
+    if (!eventId) return;
     const name     = document.getElementById('item-name').value.trim();
     const category = document.getElementById('item-category').value;
     if (!name) { document.getElementById('item-name').focus(); return; }
 
     addBtn.disabled = true;
     try {
-        await sb.from(TABLE).insert({ name, category, checked: false, added_by: myName || null });
+        await sb.from(TABLE).insert({
+            name, category, checked: false,
+            added_by: myName || null,
+            event_id: eventId
+        });
         document.getElementById('item-name').value = '';
         document.getElementById('item-name').focus();
     } finally {
@@ -1341,66 +1502,53 @@ document.getElementById('item-name').addEventListener('keydown', e => {
     if (e.key === 'Enter') addItem();
 });
 
-// ========== チェック（タップで即反映 + Undo） ==========
-let lastAction = null;  // { id, prevChecked, prevCheckedBy }
-let undoTimer  = null;
-
+// ========== チェック（長押し） ==========
 async function toggleItem(id, checked) {
     await sb.from(TABLE).update({
         checked,
         checked_by: checked ? (myName || null) : null
-    }).eq('id', id);
+    }).eq('id', id).eq('event_id', eventId);
 }
 
-async function toggleItemWithUndo(id, currentChecked, itemName) {
-    const item = items.find(i => i.id === id);
-    if (!item) return;
+let holdTimer  = null;
+let holdTarget = null;
 
-    // 前の状態を保存
-    lastAction = {
-        id,
-        prevChecked: currentChecked,
-        prevCheckedBy: item.checked_by || null
-    };
-
-    // 即座に反映
-    const newChecked = !currentChecked;
-    await toggleItem(id, newChecked);
-
-    // Undoトースト表示
-    const msg = newChecked
-        ? `✅ 「${itemName}」を購入済みに`
-        : `↩️ 「${itemName}」を未購入に`;
-    showUndoToast(msg);
+function showHoldHint() {
+    const hint = document.getElementById('hold-hint');
+    hint.classList.add('show');
+    clearTimeout(window._hintTimer);
+    window._hintTimer = setTimeout(() => hint.classList.remove('show'), 1400);
 }
 
-function showUndoToast(message) {
-    const toast = document.getElementById('undo-toast');
-    const msgEl = document.getElementById('undo-toast-msg');
-    msgEl.textContent = message;
-    toast.classList.add('show');
+function startHold(e, id, currentChecked) {
+    e.preventDefault();
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTarget = e.currentTarget;
+    holdTarget.classList.add('holding');
 
-    // 5秒後に非表示
-    clearTimeout(undoTimer);
-    undoTimer = setTimeout(() => {
-        toast.classList.remove('show');
-        lastAction = null;
-    }, 5000);
+    holdTimer = setTimeout(async () => {
+        holdTimer = null;
+        holdTarget && holdTarget.classList.remove('holding');
+        holdTarget = null;
+
+        const newChecked = !currentChecked;
+        if (currentChecked) {
+            if (!confirm('購入済みを未購入に戻しますか？')) return;
+        }
+        await toggleItem(id, newChecked);
+    }, 500);
 }
 
-async function undoLastAction() {
-    if (!lastAction) return;
-
-    const { id, prevChecked, prevCheckedBy } = lastAction;
-    await sb.from(TABLE).update({
-        checked: prevChecked,
-        checked_by: prevCheckedBy
-    }).eq('id', id);
-
-    // トースト非表示
-    clearTimeout(undoTimer);
-    document.getElementById('undo-toast').classList.remove('show');
-    lastAction = null;
+function cancelHold(e) {
+    if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+        showHoldHint();
+    }
+    if (holdTarget) {
+        holdTarget.classList.remove('holding');
+        holdTarget = null;
+    }
 }
 
 // ========== 挙手 ==========
@@ -1412,13 +1560,13 @@ async function voteItem(id) {
     const newVoters = voters.includes(myName)
         ? voters.filter(v => v !== myName)
         : [...voters, myName];
-    await sb.from(TABLE).update({ voters: newVoters }).eq('id', id);
+    await sb.from(TABLE).update({ voters: newVoters }).eq('id', id).eq('event_id', eventId);
 }
 
 // ========== 削除 ==========
 async function deleteItem(id) {
     if (confirm('このアイテムを削除しますか？')) {
-        await sb.from(TABLE).delete().eq('id', id);
+        await sb.from(TABLE).delete().eq('id', id).eq('event_id', eventId);
     }
 }
 
@@ -1433,27 +1581,23 @@ function switchTab(tab) {
     }
 }
 
-// ========== 割り勘・ワリカ型支払い記録 ==========
-// warikanEntries: 支払い記録の配列
-// { id, payer, amount, members, created_at }
-let warikanEntries = [];
+// ========== 割り勘 ==========
+let warikanEntries  = [];
+let wfSelectedPayer   = '';
+let wfSelectedMembers = [];
 
-// フォーム状態
-let wfSelectedPayer = '';   // 払った人
-let wfSelectedMembers = []; // 誰の分（複数）
-
-// Supabaseのwarikan_entriesテーブルから読み込む
 async function loadAmountEntries() {
+    if (!eventId) return;
     const { data, error } = await sb
         .from(TABLE_WARIKAN)
         .select('*')
+        .eq('event_id', eventId)
         .order('created_at', { ascending: true });
     if (error) { console.error('loadWarikanEntries error:', error); return; }
     warikanEntries = data || [];
     renderWarikanUI();
 }
 
-// 払った人チップを選択
 function selectWfPayer(name) {
     wfSelectedPayer = name;
     document.querySelectorAll('#wf-payer-chips .wf-chip').forEach(chip => {
@@ -1461,7 +1605,6 @@ function selectWfPayer(name) {
     });
 }
 
-// 誰の分チップをトグル
 function toggleWfMember(name) {
     if (wfSelectedMembers.includes(name)) {
         wfSelectedMembers = wfSelectedMembers.filter(n => n !== name);
@@ -1473,7 +1616,6 @@ function toggleWfMember(name) {
     });
 }
 
-// 払った人チップ描画
 function renderWfPayerChips() {
     const wrap = document.getElementById('wf-payer-chips');
     if (!wrap) return;
@@ -1481,7 +1623,6 @@ function renderWfPayerChips() {
         wrap.innerHTML = '<span class="payer-no-participants">参加者がいません。まず参加者登録してください。</span>';
         return;
     }
-    // デフォルト選択
     if (!wfSelectedPayer || !participants.includes(wfSelectedPayer)) {
         wfSelectedPayer = participants.includes(myName) ? myName : participants[0];
     }
@@ -1492,7 +1633,6 @@ function renderWfPayerChips() {
     `).join('');
 }
 
-// 誰の分チップ描画
 function renderWfMemberChips() {
     const wrap = document.getElementById('wf-member-chips');
     if (!wrap) return;
@@ -1500,7 +1640,6 @@ function renderWfMemberChips() {
         wrap.innerHTML = '<span class="payer-no-participants">参加者がいません。</span>';
         return;
     }
-    // デフォルト: 全員選択
     if (wfSelectedMembers.length === 0) {
         wfSelectedMembers = [...participants];
     }
@@ -1511,7 +1650,6 @@ function renderWfMemberChips() {
     `).join('');
 }
 
-// 支払い履歴リストを描画
 function renderEntryList() {
     const listEl = document.getElementById('entry-list');
     if (!listEl) return;
@@ -1519,7 +1657,6 @@ function renderEntryList() {
         listEl.innerHTML = '<div class="entry-empty">支払いを追加してください</div>';
         return;
     }
-    // 新しい順に表示
     const sorted = [...warikanEntries].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     listEl.innerHTML = sorted.map(entry => {
         const memberCount = entry.members.length;
@@ -1545,26 +1682,16 @@ function renderEntryList() {
     }).join('');
 }
 
-// 支払いエントリーを追加
 async function addWarikanEntry() {
+    if (!eventId) return;
     const amountInput = document.getElementById('wf-amount');
     const noteInput   = document.getElementById('wf-note');
     const amount = parseInt(amountInput.value) || 0;
     const note   = noteInput ? noteInput.value.trim() : '';
 
-    if (!wfSelectedPayer) {
-        alert('払った人を選んでください');
-        return;
-    }
-    if (amount <= 0) {
-        alert('金額を入力してください');
-        amountInput.focus();
-        return;
-    }
-    if (wfSelectedMembers.length === 0) {
-        alert('誰の分か選んでください');
-        return;
-    }
+    if (!wfSelectedPayer) { alert('払った人を選んでください'); return; }
+    if (amount <= 0) { alert('金額を入力してください'); amountInput.focus(); return; }
+    if (wfSelectedMembers.length === 0) { alert('誰の分か選んでください'); return; }
 
     const btn = document.getElementById('wf-add-btn');
     btn.disabled = true;
@@ -1572,7 +1699,8 @@ async function addWarikanEntry() {
     const insertData = {
         payer: wfSelectedPayer,
         amount,
-        members: [...wfSelectedMembers]
+        members: [...wfSelectedMembers],
+        event_id: eventId
     };
     if (note) insertData.note = note;
 
@@ -1585,31 +1713,21 @@ async function addWarikanEntry() {
         return;
     }
 
-    // フォームリセット
     amountInput.value = '';
     if (noteInput) noteInput.value = '';
-    // 誰の分は全員に戻す
     wfSelectedMembers = [...participants];
     renderWfMemberChips();
     btn.disabled = false;
-    // リアルタイムで更新されるが、念のため手動ロード
     await loadAmountEntries();
 }
 
-// 支払いエントリーを削除
 async function deleteWarikanEntry(id) {
     if (!confirm('この支払い記録を削除しますか？')) return;
-    const { error } = await sb.from(TABLE_WARIKAN).delete().eq('id', id);
-    if (error) {
-        console.error('deleteWarikanEntry error:', error);
-        alert('削除に失敗しました');
-        return;
-    }
-    // リアルタイムで更新されるが、念のため手動ロード
+    const { error } = await sb.from(TABLE_WARIKAN).delete().eq('id', id).eq('event_id', eventId);
+    if (error) { console.error('deleteWarikanEntry error:', error); alert('削除に失敗しました'); return; }
     await loadAmountEntries();
 }
 
-// 割り勘タブ全体を描画
 function renderWarikanUI() {
     renderWfPayerChips();
     renderWfMemberChips();
@@ -1617,10 +1735,7 @@ function renderWarikanUI() {
     calcSettlement();
 }
 
-// 旧API互換（renderParticipants等から呼ばれる）
-function renderPayerChips() {
-    renderWarikanUI();
-}
+function renderPayerChips() { renderWarikanUI(); }
 
 // ========== 精算フィルター ==========
 let settlementFilterName = '__my__';
@@ -1628,16 +1743,10 @@ let settlementFilterName = '__my__';
 function renderSettlementFilterChips() {
     const wrap = document.getElementById('settlement-filter-chips');
     if (!wrap) return;
-
     if (settlementFilterName === '__my__') {
         settlementFilterName = participants.includes(myName) ? myName : 'all';
     }
-
-    if (participants.length === 0) {
-        wrap.innerHTML = '';
-        return;
-    }
-
+    if (participants.length === 0) { wrap.innerHTML = ''; return; }
     const chips = [
         `<button class="settlement-filter-chip all-chip ${settlementFilterName === 'all' ? 'selected' : ''}"
             onclick="selectSettlementFilter('all')">全員</button>`
@@ -1659,7 +1768,7 @@ function selectSettlementFilter(name) {
     calcSettlement();
 }
 
-// ========== 精算計算（greedy） ==========
+// ========== 精算計算 ==========
 function calcSettlement() {
     const listEl = document.getElementById('settlement-list');
     const perEl  = document.getElementById('per-person');
@@ -1673,9 +1782,6 @@ function calcSettlement() {
         return;
     }
 
-    // 全参加者のnet残高を計算
-    // 立替額 = 自分がpayerの支払い合計
-    // 負担額 = 自分がmembersに含まれる支払いの 金額÷人数 の合計
     const allNames = new Set();
     warikanEntries.forEach(e => {
         allNames.add(e.payer);
@@ -1695,14 +1801,12 @@ function calcSettlement() {
         grandTotal += entry.amount;
     });
 
-    // 参加者全体で1人あたりを表示（参加者ベース）
     const count = participants.length || allNames.size;
     const perPerson = count > 0 ? Math.round(grandTotal / count) : 0;
     if (perEl) perEl.textContent = perPerson.toLocaleString();
     if (subEl) subEl.textContent = `合計 ${grandTotal.toLocaleString()}円 ÷ ${count}人`;
 
-    // greedy精算
-    const balances = Object.entries(balanceMap).map(([name, bal]) => ({ name, balance: bal }));
+    const balances  = Object.entries(balanceMap).map(([name, bal]) => ({ name, balance: bal }));
     const creditors = balances.filter(b => b.balance > 0.5).map(b => ({ ...b }));
     const debtors   = balances.filter(b => b.balance < -0.5).map(b => ({ ...b }));
 
@@ -1757,7 +1861,7 @@ function calcSettlement() {
     `).join('');
 }
 
-// 割り勘フォームの追加ボタンを初期化
+// 割り勘フォームの追加ボタン
 document.getElementById('wf-add-btn').addEventListener('click', addWarikanEntry);
 document.getElementById('wf-amount').addEventListener('keydown', e => {
     if (e.key === 'Enter') addWarikanEntry();
@@ -1771,13 +1875,12 @@ function showParticipantAddForm() {
     input.value = '';
     setTimeout(() => input.focus(), 50);
 }
-
 function hideParticipantAddForm() {
     document.getElementById('participant-add-form').classList.add('hidden');
     document.getElementById('participant-name-input').value = '';
 }
-
 async function confirmAddParticipant() {
+    if (!eventId) return;
     const input = document.getElementById('participant-name-input');
     const name = input.value.trim();
     if (!name) { input.focus(); return; }
@@ -1786,10 +1889,12 @@ async function confirmAddParticipant() {
         input.focus();
         return;
     }
-    await sb.from(TABLE_PEOPLE).upsert({ name }, { onConflict: 'name' });
+    await sb.from(TABLE_PEOPLE).upsert(
+        { name, event_id: eventId },
+        { onConflict: 'name,event_id' }
+    );
     hideParticipantAddForm();
 }
-
 document.getElementById('participant-name-confirm').addEventListener('click', confirmAddParticipant);
 document.getElementById('participant-name-cancel').addEventListener('click', hideParticipantAddForm);
 document.getElementById('participant-name-input').addEventListener('keydown', e => {
@@ -1799,20 +1904,20 @@ document.getElementById('participant-name-input').addEventListener('keydown', e 
 
 // ========== 参加者の削除 ==========
 async function removeParticipant(name) {
+    if (!eventId) return;
     if (!confirm(`「${name}」を参加者から削除しますか？`)) return;
 
-    // 割り勘履歴から削除対象者を除外する（専用テーブル操作）
-    // 最新データを取得
-    const { data: currentData } = await sb.from(TABLE_WARIKAN).select('*').order('created_at', { ascending: true });
+    const { data: currentData } = await sb
+        .from(TABLE_WARIKAN).select('*')
+        .eq('event_id', eventId)
+        .order('created_at', { ascending: true });
     const currentEntries = currentData || [];
 
-    // payer が削除対象のエントリーをDELETE
     const payerEntries = currentEntries.filter(e => e.payer === name);
     for (const entry of payerEntries) {
         await sb.from(TABLE_WARIKAN).delete().eq('id', entry.id);
     }
 
-    // members に削除対象が含まれるエントリーをUPDATE（空になったらDELETE）
     const memberEntries = currentEntries.filter(e => e.payer !== name && e.members.includes(name));
     for (const entry of memberEntries) {
         const newMembers = entry.members.filter(m => m !== name);
@@ -1823,7 +1928,7 @@ async function removeParticipant(name) {
         }
     }
 
-    await sb.from(TABLE_PEOPLE).delete().eq('name', name);
+    await sb.from(TABLE_PEOPLE).delete().eq('name', name).eq('event_id', eventId);
 }
 
 // ========== 名前変更モーダル ==========
@@ -1834,12 +1939,11 @@ function showRenameModal() {
     modal.classList.remove('hidden');
     setTimeout(() => { input.focus(); input.select(); }, 100);
 }
-
 function hideRenameModal() {
     document.getElementById('rename-modal').classList.add('hidden');
 }
-
 async function submitRename() {
+    if (!eventId) return;
     const input = document.getElementById('rename-input');
     const newName = input.value.trim();
     if (!newName) { input.focus(); return; }
@@ -1849,29 +1953,29 @@ async function submitRename() {
         input.focus();
         return;
     }
-
     const oldName = myName;
-
-    // localStorageとmyName更新
     myName = newName;
     localStorage.setItem('bbq_user_name', myName);
     hideRenameModal();
 
-    // Supabase: 古い名前削除 → 新しい名前insert
-    await sb.from(TABLE_PEOPLE).delete().eq('name', oldName);
-    await sb.from(TABLE_PEOPLE).upsert({ name: newName }, { onConflict: 'name' });
+    await sb.from(TABLE_PEOPLE).delete().eq('name', oldName).eq('event_id', eventId);
+    await sb.from(TABLE_PEOPLE).upsert(
+        { name: newName, event_id: eventId },
+        { onConflict: 'name,event_id' }
+    );
 
-    // 画面を再描画（リアルタイムで来るが念のため手動更新）
     participants = participants.map(n => n === oldName ? newName : n);
     renderParticipants();
 }
-
 document.getElementById('rename-submit-btn').addEventListener('click', submitRename);
 document.getElementById('rename-cancel-btn').addEventListener('click', hideRenameModal);
 document.getElementById('rename-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') submitRename();
     if (e.key === 'Escape') hideRenameModal();
 });
+
+// ========== 起動 ==========
+initEvent();
 </script>
 </body>
 </html>

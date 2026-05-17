@@ -22,28 +22,28 @@ SQL_FILES=()
 if [ -d "$MIGRATIONS_DIR" ]; then
   while IFS= read -r -d '' f; do
     SQL_FILES+=("$f")
-  done < <(find "$MIGRATIONS_DIR" -name "*.sql" -print0 2>/dev/null | sort -z)
+  done < <(find "$MIGRATIONS_DIR" -maxdepth 1 -name "*.sql" -print0 2>/dev/null | sort -z)
 fi
 
 if [ ${#SQL_FILES[@]} -gt 0 ]; then
   echo "📦 SQLマイグレーション実行中..."
   for sql_file in "${SQL_FILES[@]}"; do
     echo "  → $(basename "$sql_file")"
-    node - "$sql_file" <<'EOF'
-const sql_file = process.argv[1];
-const sql = require('fs').readFileSync(sql_file, 'utf8');
-fetch('https://api.supabase.com/v1/projects/' + process.env.SUPABASE_PROJECT_REF + '/database/query', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ' + process.env.SUPABASE_PAT,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({ query: sql })
-}).then(r => r.json()).then(r => {
-  if (r.message) { console.error('SQL error:', r.message); process.exit(1); }
-  console.log('  ✅ OK');
-}).catch(e => { console.error(e); process.exit(1); });
-EOF
+    node -e "
+      const fs = require('fs');
+      const sql = fs.readFileSync(process.argv[1], 'utf8');
+      fetch('https://api.supabase.com/v1/projects/' + process.env.SUPABASE_PROJECT_REF + '/database/query', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + process.env.SUPABASE_PAT,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query: sql })
+      }).then(r => r.json()).then(r => {
+        if (r.message) { console.error('SQL error:', r.message); process.exit(1); }
+        console.log('  ✅ OK');
+      }).catch(e => { console.error(e); process.exit(1); });
+    " "$sql_file"
   done
 else
   echo "📦 SQLマイグレーション: なし（スキップ）"
