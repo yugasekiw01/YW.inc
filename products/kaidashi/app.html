@@ -9,6 +9,13 @@
     <meta property="og:description" content="買い出しをみんなで管理しよう！">
     <meta property="og:type" content="website">
     <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
+    <!-- PWA対応 -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1ABC9C">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="カイダシ">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,7 +24,9 @@
             background: linear-gradient(160deg, #E8FAF4 0%, #F0FBF7 60%, #E4F7EF 100%);
             min-height: 100vh;
             padding-bottom: 100px;
+            overflow-x: hidden;
         }
+        #tab-warikan { overflow: hidden; }
 
         /* ---- ヘッダー ---- */
         header {
@@ -72,12 +81,13 @@
         /* ---- タブ ---- */
         .tabs {
             display: flex;
-            background: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             margin: 0 14px;
             border-radius: 0 0 20px 20px;
             box-shadow: 0 6px 20px rgba(26,188,156,0.1);
             overflow: hidden;
+            position: relative; z-index: 2;
         }
         .tab-btn {
             flex: 1; padding: 14px 8px; border: none; background: none;
@@ -93,11 +103,10 @@
         .add-form {
             background: rgba(255,255,255,0.9);
             backdrop-filter: blur(12px);
-            margin: -16px 14px 0; padding: 20px;
+            margin: 14px 14px 0; padding: 20px;
             border-radius: 24px;
             box-shadow: 0 8px 28px rgba(26,188,156,0.12);
             border: 1.5px solid rgba(200,237,230,0.5);
-            position: relative; z-index: 1;
         }
         input[type="text"], select {
             border: 2px solid #C8EDE6; border-radius: 14px;
@@ -253,11 +262,13 @@
         }
         .item:hover { box-shadow: 0 4px 16px rgba(26,188,156,0.12); }
         .item:active { transform: scale(0.99); }
-        .item[data-cat="食品"]       { border-left-color: #1ABC9C; }
+        .item[data-cat="食べ物"]     { border-left-color: #1ABC9C; }
         .item[data-cat="飲み物"]     { border-left-color: #3498DB; }
         .item[data-cat="日用品"]     { border-left-color: #F39C12; }
-        .item[data-cat="野菜・果物"] { border-left-color: #2ECC71; }
+        .item[data-cat="ホビー"]     { border-left-color: #E91E63; }
         .item[data-cat="その他"]     { border-left-color: #9B59B6; }
+        .item[data-cat="食品"]       { border-left-color: #9B59B6; }
+        .item[data-cat="野菜・果物"] { border-left-color: #9B59B6; }
         .item.checked { opacity: 0.45; }
         .item.checked .item-name { text-decoration: line-through; }
         .item-checkbox { width: 24px; height: 24px; cursor: pointer; accent-color: #1ABC9C; flex-shrink: 0; }
@@ -279,6 +290,29 @@
             flex-shrink: 0; font-weight: 800;
         }
         .delete-btn:hover { color: #E74C3C; background: #FFE0E0; }
+        .cat-btn {
+            background: #F5F5F5; border: none; color: #888;
+            cursor: pointer; font-size: 0.85rem; padding: 5px 8px;
+            border-radius: 8px; transition: all 0.18s; flex-shrink: 0;
+        }
+        .cat-btn:hover { background: #E8E8E8; color: #555; }
+        .cat-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+        }
+        .cat-modal.hidden { display: none; }
+        .cat-modal-box {
+            background: white; border-radius: 20px; padding: 20px;
+            width: 100%; max-width: 300px; text-align: center;
+        }
+        .cat-modal-title { font-size: 1rem; font-weight: 800; margin-bottom: 16px; color: #333; }
+        .cat-option {
+            display: block; width: 100%; padding: 12px; margin-bottom: 8px;
+            border: 2px solid #E8E8E8; border-radius: 12px; background: #FAFAFA;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+        }
+        .cat-option:hover { border-color: #1ABC9C; background: #F0FBF7; }
+        .cat-cancel { margin-top: 8px; color: #888; font-size: 0.9rem; cursor: pointer; }
         .vote-btn {
             background: #F0FBF7; border: 2px solid #C8EDE6; color: #1ABC9C;
             cursor: pointer; font-size: 0.85rem; padding: 5px 10px;
@@ -321,8 +355,8 @@
         .empty-state p { font-size: 1rem; font-weight: 700; }
 
         /* ---- 割り勘 ---- */
-        .warikan-wrap { margin: 14px 14px 0; display: flex; flex-direction: column; gap: 12px; }
-        .warikan-card { background: white; border-radius: 16px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .warikan-wrap { margin: 14px; display: flex; flex-direction: column; gap: 12px; max-width: 100%; box-sizing: border-box; }
+        .warikan-card { background: white; border-radius: 16px; padding: 18px 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); box-sizing: border-box; overflow: hidden; }
         .warikan-label { font-size: 0.8rem; font-weight: 800; color: #A0C8BE; margin-bottom: 12px; }
         .wf-section-label { font-size: 0.8rem; font-weight: 800; color: #A0C8BE; margin-bottom: 8px; }
         .wf-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
@@ -335,9 +369,9 @@
         .wf-chip.selected { background: #1ABC9C; border-color: #1ABC9C; color: white; box-shadow: 0 3px 10px rgba(26,188,156,0.4); }
         .wf-chip.me-chip { border-color: #2ECC71; color: #2ECC71; }
         .wf-chip.me-chip.selected { background: linear-gradient(135deg, #1ABC9C, #2ECC71); border-color: #1ABC9C; color: white; }
-        .wf-amount-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .wf-amount-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; width: 100%; }
         .wf-amount-input {
-            flex: 1; font-size: 1.6rem; font-weight: 800; text-align: right;
+            flex: 1; min-width: 0; font-size: 1.6rem; font-weight: 800; text-align: right;
             padding: 10px 14px; border: 2px solid #C8EDE6; border-radius: 12px;
             font-family: inherit; outline: none; background: #F7FDFB;
         }
@@ -354,7 +388,7 @@
         .wf-add-btn:active { transform: scale(0.97); }
         .wf-add-btn:disabled { background: linear-gradient(135deg, #A8E6DA, #B8F0C8); box-shadow: none; cursor: default; transform: none; }
         .wf-note-input {
-            width: 100%; font-size: 0.95rem; font-weight: 700; padding: 10px 14px;
+            width: 100%; max-width: 100%; font-size: 0.95rem; font-weight: 700; padding: 10px 14px;
             border: 2px solid #C8EDE6; border-radius: 12px; font-family: inherit;
             outline: none; background: #F7FDFB;
         }
@@ -392,8 +426,8 @@
         .settlement-empty { text-align: center; color: #B2D8D0; font-size: 0.85rem; font-weight: 700; padding: 16px 0; }
         .warikan-result {
             background: linear-gradient(135deg, #1ABC9C, #2ECC71);
-            border-radius: 20px; padding: 22px 20px; text-align: center;
-            box-shadow: 0 8px 24px rgba(26,188,156,0.3);
+            border-radius: 20px; padding: 22px 16px; text-align: center;
+            box-shadow: 0 8px 24px rgba(26,188,156,0.3); box-sizing: border-box;
         }
         .warikan-result .result-label { font-size: 0.9rem; font-weight: 800; color: rgba(255,255,255,0.85); margin-bottom: 8px; }
         .warikan-result .result-num { font-size: 3.2rem; font-weight: 800; color: white; line-height: 1; }
@@ -413,28 +447,37 @@
         .settlement-filter-chip.all-chip:hover { background: #E8E8E8; border-color: #BBB; }
         .settlement-filter-chip.all-chip.selected { background: #888; border-color: #888; color: white; }
 
-        /* ---- 長押し ---- */
+        /* ---- チェックボックス ---- */
         .checkbox-wrap {
             position: relative; display: flex; align-items: center; justify-content: center;
             width: 36px; height: 36px; flex-shrink: 0; cursor: pointer;
-            border-radius: 50%; transition: background 0.15s;
+            border-radius: 50%; transition: background 0.15s, transform 0.1s;
         }
-        .checkbox-wrap:active { background: rgba(26,188,156,0.12); }
-        .hold-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; pointer-events: none; }
-        .checkbox-wrap.holding .hold-ring { border-color: #1ABC9C; animation: fillRing 0.5s linear forwards; }
-        @keyframes fillRing {
-            0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
-            100% { clip-path: inset(0 0% 0 0);   opacity: 1; }
-        }
-        .hold-hint {
+        .checkbox-wrap:hover { background: rgba(26,188,156,0.08); }
+        .checkbox-wrap:active { background: rgba(26,188,156,0.18); transform: scale(0.92); }
+
+        /* ---- Undo トースト ---- */
+        .undo-toast {
             position: fixed; bottom: 70px; left: 50%;
-            transform: translateX(-50%) translateY(10px);
-            background: rgba(0,0,0,0.72); color: white;
-            font-size: 0.82rem; font-weight: 700; padding: 8px 18px;
-            border-radius: 20px; opacity: 0; pointer-events: none;
-            transition: opacity 0.2s, transform 0.2s; z-index: 200; white-space: nowrap;
+            transform: translateX(-50%) translateY(20px);
+            background: #333; color: white;
+            font-size: 0.9rem; font-weight: 700;
+            padding: 12px 16px; border-radius: 12px;
+            display: flex; align-items: center; gap: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s; z-index: 300;
         }
-        .hold-hint.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .undo-toast.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+        .undo-toast-msg { flex: 1; }
+        .undo-toast-btn {
+            background: #1ABC9C; color: white; border: none;
+            border-radius: 8px; padding: 8px 16px;
+            font-size: 0.88rem; font-weight: 800; font-family: inherit;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .undo-toast-btn:hover { background: #16A085; }
+        .undo-toast-btn:active { transform: scale(0.95); }
 
         /* ---- 接続ステータス ---- */
         .conn-status {
@@ -496,13 +539,20 @@ if (!EVENT_CODE) location.href = 'index.html';
 <div id="tab-list" class="tab-panel">
     <div class="add-form">
         <div class="input-row">
-            <input type="text" id="item-name" placeholder="品目を入力（例: 牛乳・お茶・洗剤）" autocomplete="off" />
+            <input type="text" id="item-name" placeholder="品目を入力" autocomplete="off" style="flex: 1;" />
+            <input type="number" id="item-quantity" placeholder="数量" style="width: 70px;" min="0" inputmode="numeric" />
+            <select id="item-unit" style="width: 70px;">
+                <option value="">単位</option>
+                <option value="個">個</option>
+                <option value="g">g</option>
+                <option value="ml">ml</option>
+            </select>
         </div>
         <select id="item-category">
-            <option value="食品">🍱 食品</option>
+            <option value="食べ物">🍽️ 食べ物</option>
             <option value="飲み物">🥤 飲み物</option>
-            <option value="野菜・果物">🥦 野菜・果物</option>
             <option value="日用品">🧴 日用品</option>
+            <option value="ホビー">🎮 ホビー</option>
             <option value="その他">📦 その他</option>
         </select>
         <button class="add-btn" id="add-btn">＋ リストに追加！</button>
@@ -594,7 +644,20 @@ if (!EVENT_CODE) location.href = 'index.html';
     </div>
 </div>
 
-<div class="hold-hint" id="hold-hint">長押しでチェック ✓</div>
+<div class="undo-toast" id="undo-toast">
+    <span class="undo-toast-msg" id="undo-toast-msg"></span>
+    <button class="undo-toast-btn" onclick="undoLastAction()">戻す</button>
+</div>
+
+<!-- カテゴリ変更モーダル -->
+<div class="cat-modal hidden" id="cat-modal">
+    <div class="cat-modal-box">
+        <div class="cat-modal-title">📂 カテゴリを変更</div>
+        <div id="cat-options"></div>
+        <div class="cat-cancel" onclick="closeCatModal()">キャンセル</div>
+    </div>
+</div>
+
 <div class="conn-status online" id="conn-status">● オンライン</div>
 
 </div><!-- /main-content -->
@@ -612,8 +675,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const CATEGORIES = ['食品', '飲み物', '野菜・果物', '日用品', 'その他'];
-const CAT_ICONS  = { '食品':'🍱', '飲み物':'🥤', '野菜・果物':'🥦', '日用品':'🧴', 'その他':'📦' };
+const CATEGORIES = ['食べ物', '飲み物', '日用品', 'ホビー', 'その他'];
+const CAT_ICONS  = { '食べ物':'🍽️', '飲み物':'🥤', '日用品':'🧴', 'ホビー':'🎮', 'その他':'📦' };
 
 let items = [], participants = [], warikanEntries = [];
 let myName = localStorage.getItem('kaidashi_user_name') || '';
@@ -708,24 +771,33 @@ function render() {
     const container = document.getElementById('items-container');
     if (!total) { container.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><p>まだ何も追加されていません！</p></div>'; return; }
     const grouped = {};
-    items.forEach(item => { const c = item.category || 'その他'; (grouped[c] = grouped[c] || []).push(item); });
+    items.forEach(item => { const c = CATEGORIES.includes(item.category) ? item.category : 'その他'; (grouped[c] = grouped[c] || []).push(item); });
     let html = '';
     CATEGORIES.forEach(cat => {
         const group = grouped[cat]; if (!group?.length) return;
         html += `<div class="category-section"><div class="category-title">${CAT_ICONS[cat]} ${esc(cat)}</div>`;
         group.forEach(item => {
             const voters = item.voters || [], voted = voters.includes(myName);
-            const canDelete = item.added_by && item.added_by === myName;
             const checkerHtml = item.checked && item.checked_by ? `<div class="checker">✓ ${esc(item.checked_by)}</div>` : '';
             const votersHtml = buildVotersHtml(voters);
+            const showVoteButton = participants.length > 1;
+            // 数量・単位の表示
+            let displayName = esc(item.name);
+            if (item.quantity && item.unit) {
+                displayName += ` <strong>${item.quantity}${item.unit}</strong>`;
+            } else if (item.quantity) {
+                displayName += ` <strong>${item.quantity}</strong>`;
+            } else if (item.unit) {
+                displayName += ` <strong>${item.unit}</strong>`;
+            }
             html += `<div class="item ${item.checked?'checked':''}" data-cat="${esc(item.category)}">
-                <div class="checkbox-wrap" onmousedown="startHold(event,'${esc(item.id)}',${item.checked})" ontouchstart="startHold(event,'${esc(item.id)}',${item.checked})" onmouseup="cancelHold(event)" onmouseleave="cancelHold(event)" ontouchend="cancelHold(event)" ontouchcancel="cancelHold(event)">
+                <div class="checkbox-wrap" onclick="toggleItemWithUndo('${esc(item.id)}',${item.checked},'${esc(item.name)}')">
                     <input type="checkbox" class="item-checkbox" ${item.checked?'checked':''} style="pointer-events:none;">
-                    <div class="hold-ring"></div>
                 </div>
-                <div class="item-info"><div class="item-name">${esc(item.name)}</div>${checkerHtml}${votersHtml}</div>
-                <button class="vote-btn ${voted?'voted':''}" onclick="voteItem('${esc(item.id)}')">✋ ホシイ！${voters.length?' '+voters.length:''}</button>
-                ${canDelete?`<button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>`:''}
+                <div class="item-info"><div class="item-name">${displayName}</div>${checkerHtml}${votersHtml}</div>
+                ${showVoteButton ? `<button class="vote-btn ${voted?'voted':''}" onclick="voteItem('${esc(item.id)}')">✋ ホシイ！${voters.length?' '+voters.length:''}</button>` : ''}
+                <button class="cat-btn" onclick="openCatModal('${esc(item.id)}')">${CAT_ICONS[CATEGORIES.includes(item.category)?item.category:'その他']||'📦'}</button>
+                <button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>
             </div>`;
         });
         html += '</div>';
@@ -763,20 +835,54 @@ async function addItem() {
     if (!eventId) return;
     const name = document.getElementById('item-name').value.trim();
     const category = document.getElementById('item-category').value;
+    const quantity = parseInt(document.getElementById('item-quantity').value) || null;
+    const unit = document.getElementById('item-unit').value || null;
     if (!name) { document.getElementById('item-name').focus(); return; }
     addBtn.disabled = true;
     try {
-        await sb.from('items').insert({ name, category, checked: false, added_by: myName || null, event_id: eventId });
+        await sb.from('items').insert({ name, category, quantity, unit, checked: false, added_by: myName || null, event_id: eventId });
         document.getElementById('item-name').value = '';
+        document.getElementById('item-quantity').value = '';
+        document.getElementById('item-unit').value = '';
         document.getElementById('item-name').focus();
     } finally { addBtn.disabled = false; }
 }
 addBtn.addEventListener('click', addItem);
 document.getElementById('item-name').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
 
+// ========== チェック（タップ即反映 + Undo） ==========
+let lastAction = null, undoTimer = null;
+
 async function toggleItem(id, checked) {
     await sb.from('items').update({ checked, checked_by: checked ? (myName || null) : null }).eq('id', id).eq('event_id', eventId);
 }
+
+async function toggleItemWithUndo(id, currentChecked, itemName) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    lastAction = { id, prevChecked: currentChecked, prevCheckedBy: item.checked_by || null };
+    const newChecked = !currentChecked;
+    await toggleItem(id, newChecked);
+    showUndoToast(newChecked ? `✅「${itemName}」を購入済みに` : `↩️「${itemName}」を未購入に`);
+}
+
+function showUndoToast(msg) {
+    const toast = document.getElementById('undo-toast');
+    document.getElementById('undo-toast-msg').textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => { toast.classList.remove('show'); lastAction = null; }, 5000);
+}
+
+async function undoLastAction() {
+    if (!lastAction) return;
+    const { id, prevChecked, prevCheckedBy } = lastAction;
+    await sb.from('items').update({ checked: prevChecked, checked_by: prevCheckedBy }).eq('id', id).eq('event_id', eventId);
+    clearTimeout(undoTimer);
+    document.getElementById('undo-toast').classList.remove('show');
+    lastAction = null;
+}
+
 async function voteItem(id) {
     if (!myName) { showNameModal(); return; }
     const item = items.find(i => i.id === id); if (!item) return;
@@ -786,20 +892,24 @@ async function voteItem(id) {
 }
 async function deleteItem(id) { if (confirm('このアイテムを削除しますか？')) await sb.from('items').delete().eq('id', id).eq('event_id', eventId); }
 
-let holdTimer = null, holdTarget = null;
-function showHoldHint() { const h = document.getElementById('hold-hint'); h.classList.add('show'); clearTimeout(window._hintTimer); window._hintTimer = setTimeout(() => h.classList.remove('show'), 1400); }
-function startHold(e, id, currentChecked) {
-    e.preventDefault(); if (holdTimer) clearTimeout(holdTimer);
-    holdTarget = e.currentTarget; holdTarget.classList.add('holding');
-    holdTimer = setTimeout(async () => {
-        holdTimer = null; holdTarget?.classList.remove('holding'); holdTarget = null;
-        if (currentChecked && !confirm('購入済みを未購入に戻しますか？')) return;
-        await toggleItem(id, !currentChecked);
-    }, 500);
+// ========== カテゴリ変更 ==========
+let catChangeItemId = null;
+function openCatModal(id) {
+    catChangeItemId = id;
+    const optionsHtml = CATEGORIES.map(cat =>
+        `<button class="cat-option" onclick="changeCategory('${cat}')">${CAT_ICONS[cat]} ${cat}</button>`
+    ).join('');
+    document.getElementById('cat-options').innerHTML = optionsHtml;
+    document.getElementById('cat-modal').classList.remove('hidden');
 }
-function cancelHold(e) {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; showHoldHint(); }
-    if (holdTarget) { holdTarget.classList.remove('holding'); holdTarget = null; }
+function closeCatModal() {
+    document.getElementById('cat-modal').classList.add('hidden');
+    catChangeItemId = null;
+}
+async function changeCategory(newCat) {
+    if (!catChangeItemId) return;
+    await sb.from('items').update({ category: newCat }).eq('id', catChangeItemId).eq('event_id', eventId);
+    closeCatModal();
 }
 
 // ========== タブ ==========
@@ -948,6 +1058,15 @@ document.getElementById('rename-cancel-btn').addEventListener('click', hideRenam
 document.getElementById('rename-input').addEventListener('keydown', e => { if (e.key==='Enter') submitRename(); if (e.key==='Escape') hideRenameModal(); });
 
 initEvent();
+
+// Service Worker登録
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg))
+      .catch(err => console.error('SW registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>
