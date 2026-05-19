@@ -169,6 +169,13 @@
         .recent-name { font-size: 1rem; color: #2C7A6C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .recent-code { font-size: 0.75rem; color: #8ABFB0; margin-top: 2px; }
         .recent-arrow { font-size: 1.2rem; color: #1ABC9C; flex-shrink: 0; }
+        .recent-delete {
+            background: #FFF0F0; border: none; color: #FFAAAA;
+            cursor: pointer; font-size: 0.9rem; padding: 6px 10px;
+            border-radius: 10px; transition: color 0.18s, background 0.18s;
+            flex-shrink: 0;
+        }
+        .recent-delete:hover { color: #E74C3C; background: #FFE0E0; }
         .no-recent { text-align: center; color: #B2D8D0; font-size: 0.9rem; padding: 8px 0; }
 
         /* ---- 作成成功モーダル ---- */
@@ -289,14 +296,15 @@ function loadRecentEvents() {
         return;
     }
     listEl.innerHTML = recent.slice(0, 5).map(ev => `
-        <a class="recent-item" href="app.html?event=${encodeURIComponent(ev.code)}">
+        <div class="recent-item" onclick="location.href='app.html?event=${encodeURIComponent(ev.code)}'">
             <span class="recent-icon">🛒</span>
             <div class="recent-info">
                 <div class="recent-name">${esc(ev.name)}</div>
                 <div class="recent-code">コード: ${esc(ev.code)}</div>
             </div>
+            <button class="recent-delete" onclick="event.stopPropagation(); deleteEvent('${esc(ev.code)}', '${esc(ev.name)}')">🗑️</button>
             <span class="recent-arrow">›</span>
-        </a>`).join('');
+        </div>`).join('');
 }
 
 function saveRecentEvent(code, name) {
@@ -351,6 +359,29 @@ function copyUrl() {
 }
 
 function closeModal() { document.getElementById('success-modal').classList.add('hidden'); }
+
+async function deleteEvent(code, name) {
+    if (!confirm(`「${name}」を削除しますか？\n\n⚠️ このイベントの全てのデータが削除されます。`)) return;
+    try {
+        // イベントIDを取得
+        const { data: ev } = await sb.from('events').select('id').eq('event_code', code).single();
+        if (ev) {
+            // 関連データを全て削除
+            await sb.from('items').delete().eq('event_id', ev.id);
+            await sb.from('participants').delete().eq('event_id', ev.id);
+            await sb.from('warikan_entries').delete().eq('event_id', ev.id);
+            await sb.from('events').delete().eq('id', ev.id);
+        }
+        // ローカル履歴から削除
+        let recent = []; try { recent = JSON.parse(localStorage.getItem('kaidashi_recent') || '[]'); } catch {}
+        recent = recent.filter(e => e.code !== code);
+        localStorage.setItem('kaidashi_recent', JSON.stringify(recent));
+        loadRecentEvents();
+    } catch (e) {
+        console.error('Delete error:', e);
+        alert('削除に失敗しました');
+    }
+}
 
 document.getElementById('create-btn').addEventListener('click', createEvent);
 document.getElementById('event-name-input').addEventListener('keydown', e => { if (e.key === 'Enter') createEvent(); });
