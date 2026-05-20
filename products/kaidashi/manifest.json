@@ -1,6 +1,7 @@
 {
   "name": "カイダシ",
   "short_name": "カイダシ",
+  "version": "3.7.0",
   "description": "イベントごとに買い出しと割り勘をみんなで管理！",
   "start_url": "/",
   "display": "standalone",

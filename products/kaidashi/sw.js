@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kaidashi-v2.1';
+const CACHE_NAME = 'kaidashi-v3.7';
 const urlsToCache = [
   '/',
   '/index.html',

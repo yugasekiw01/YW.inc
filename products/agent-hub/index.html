@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agent Hub | YW.inc</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e8e8e8;
+        }
+
+        /* ---- ヘッダー ---- */
+        header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            padding: 24px 16px;
+            text-align: center;
+            position: relative;
+        }
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+        }
+        header p {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        /* ---- W字フェーズ ---- */
+        .phase-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            margin: 16px;
+            border-radius: 16px;
+            overflow-x: auto;
+        }
+        .phase-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+            opacity: 0.4;
+            transition: all 0.3s;
+        }
+        .phase-item.active {
+            opacity: 1;
+        }
+        .phase-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+        }
+        .phase-item.active .phase-icon {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        .phase-name {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        /* ---- エージェントカード ---- */
+        .agents-section {
+            padding: 0 16px;
+        }
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #888;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .agent-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 16px 12px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .agent-card.busy {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .agent-card.stale {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+        .agent-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin: 0 auto 8px;
+        }
+        .agent-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        .agent-status {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .agent-status.idle { background: rgba(100,100,100,0.3); color: #aaa; }
+        .agent-status.busy { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .agent-status.stale { background: rgba(245,158,11,0.2); color: #f59e0b; }
+
+        /* ---- タスクリスト ---- */
+        .tasks-section {
+            padding: 0 16px 100px;
+        }
+        .task-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-left: 4px solid #6366f1;
+        }
+        .task-card.running { border-left-color: #22c55e; }
+        .task-card.done { border-left-color: #888; opacity: 0.6; }
+        .task-card.failed { border-left-color: #ef4444; }
+        .task-card.cancelled { border-left-color: #888; opacity: 0.4; }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .task-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            flex: 1;
+        }
+        .task-status {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 700;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+        .task-status.pending { background: rgba(99,102,241,0.2); color: #818cf8; }
+        .task-status.running { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .task-status.done { background: rgba(100,100,100,0.3); color: #aaa; }
+        .task-status.failed { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .task-status.cancelled { background: rgba(100,100,100,0.2); color: #888; }
+
+        .task-meta {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .task-agents {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .task-agent-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+        }
+        .task-arrow { color: #666; }
+
+        .task-progress {
+            margin-top: 10px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .task-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #22c55e);
+            transition: width 0.3s;
+        }
+
+        /* ---- 新規タスク作成ボタン ---- */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+            transition: transform 0.2s;
+        }
+        .fab:hover { transform: scale(1.1); }
+        .fab:active { transform: scale(0.95); }
+
+        /* ---- タスク作成モーダル ---- */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal.hidden { display: none; }
+        .modal-box {
+            background: #1a1a2e;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #888;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: #e8e8e8;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+        }
+        .form-input:focus, .form-select:focus {
+            border-color: #6366f1;
+        }
+        .form-select option {
+            background: #1a1a2e;
+        }
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #888;
+        }
+
+        /* ---- 接続ステータス ---- */
+        .conn-status {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .conn-status.online { background: #22c55e; color: white; }
+        .conn-status.offline { background: #ef4444; color: white; }
+
+        /* ---- 空状態 ---- */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+        /* ---- ローディング ---- */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Agent Hub</h1>
+    <p>YW.inc エージェント連携ダッシュボード</p>
+</header>
+
+<!-- W字フェーズ表示 -->
+<div class="phase-bar">
+    <div class="phase-item" data-phase="requirements">
+        <div class="phase-icon">📋</div>
+        <div class="phase-name">要件定義</div>
+    </div>
+    <div class="phase-item" data-phase="implementation">
+        <div class="phase-icon">💻</div>
+        <div class="phase-name">実装</div>
+    </div>
+    <div class="phase-item" data-phase="testing">
+        <div class="phase-icon">🧪</div>
+        <div class="phase-name">テスト</div>
+    </div>
+    <div class="phase-item" data-phase="release">
+        <div class="phase-icon">🚀</div>
+        <div class="phase-name">リリース</div>
+    </div>
+    <div class="phase-item" data-phase="review">
+        <div class="phase-icon">🔄</div>
+        <div class="phase-name">振り返り</div>
+    </div>
+</div>
+
+<!-- エージェント一覧 -->
+<div class="agents-section">
+    <div class="section-title">エージェント</div>
+    <div class="agents-grid" id="agents-grid">
+        <div class="loading">読み込み中...</div>
+    </div>
+</div>
+
+<!-- タスクリスト -->
+<div class="tasks-section">
+    <div class="section-title">タスク</div>
+    <div id="tasks-container">
+        <div class="loading">読み込み中...</div>
+    </div>
+</div>
+
+<!-- 新規タスク作成ボタン -->
+<button class="fab" onclick="openModal()">+</button>
+
+<!-- タスク作成モーダル -->
+<div class="modal hidden" id="task-modal">
+    <div class="modal-box">
+        <div class="modal-title">新規タスク作成</div>
+
+        <div class="form-group">
+            <label class="form-label">タイトル</label>
+            <input type="text" class="form-input" id="task-title" placeholder="タスクのタイトル">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">依頼先エージェント</label>
+            <select class="form-select" id="task-to-agent">
+                <option value="sakura">Sakura（秘書）</option>
+                <option value="conner">Conner（コンサル）</option>
+                <option value="david">David（開発）</option>
+                <option value="tiara">Tiara（テスト）</option>
+                <option value="imai">Imai（インフラ）</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">タスク種別</label>
+            <select class="form-select" id="task-type">
+                <option value="dev">開発</option>
+                <option value="test">テスト</option>
+                <option value="deploy">デプロイ</option>
+                <option value="review">レビュー</option>
+                <option value="other">その他</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">フェーズ</label>
+            <select class="form-select" id="task-phase">
+                <option value="要件定義">要件定義</option>
+                <option value="実装">実装</option>
+                <option value="テスト">テスト</option>
+                <option value="リリース">リリース</option>
+                <option value="振り返り">振り返り</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">説明（任意）</label>
+            <textarea class="form-input form-textarea" id="task-description" placeholder="タスクの詳細"></textarea>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+            <button class="btn btn-primary" onclick="createTask()">作成</button>
+        </div>
+    </div>
+</div>
+
+<div class="conn-status online" id="conn-status">● オンライン</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ========== Supabase 設定 ==========
+const SUPABASE_URL = 'https://pemepunzxrvmsvjjhsry.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWVwdW56eHJ2bXN2ampoc3J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwOTk2NTcsImV4cCI6MjA5NDY3NTY1N30.AvfSOhXCQWk5TDzP0JaP_z54sonNpCwYlIOE2TXslCE';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ========== グローバル変数 ==========
+const AGENTS = [
+    { name: 'sakura', display: 'Sakura', role: '秘書', icon: '🌸' },
+    { name: 'conner', display: 'Conner', role: 'コンサル', icon: '📊' },
+    { name: 'david', display: 'David', role: '開発', icon: '💻' },
+    { name: 'tiara', display: 'Tiara', role: 'テスト', icon: '🧪' },
+    { name: 'imai', display: 'Imai', role: 'インフラ', icon: '🔧' }
+];
+
+const PHASE_MAP = {
+    '要件定義': 'requirements',
+    '実装': 'implementation',
+    'テスト': 'testing',
+    'リリース': 'release',
+    '振り返り': 'review'
+};
+
+let agentStatuses = {};
+let tasks = [];
+let currentPhase = '要件定義';
+
+// ========== 初期化 ==========
+async function init() {
+    await loadAgentStatuses();
+    await loadTasks();
+    setupRealtime();
+}
+
+// ========== エージェントステータス ==========
+async function loadAgentStatuses() {
+    const { data, error } = await sb.from('agent_status').select('*');
+    if (error) {
+        console.error('Error loading agent statuses:', error);
+        renderAgentsOffline();
+        return;
+    }
+    data.forEach(a => { agentStatuses[a.agent_name] = a; });
+    renderAgents();
+}
+
+function renderAgents() {
+    const grid = document.getElementById('agents-grid');
+    grid.innerHTML = AGENTS.map(agent => {
+        const status = agentStatuses[agent.name]?.status || 'idle';
+        return `
+            <div class="agent-card ${status}">
+                <div class="agent-avatar">${agent.icon}</div>
+                <div class="agent-name">${agent.display}</div>
+                <div class="agent-status ${status}">${getStatusText(status)}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderAgentsOffline() {
+    const grid = document.getElementById('agents-grid');
+    grid.innerHTML = AGENTS.map(agent => `
+        <div class="agent-card">
+            <div class="agent-avatar">${agent.icon}</div>
+            <div class="agent-name">${agent.display}</div>
+            <div class="agent-status idle">-</div>
+        </div>
+    `).join('');
+}
+
+function getStatusText(status) {
+    const map = { idle: '待機中', busy: '実行中', stale: '無応答' };
+    return map[status] || status;
+}
+
+// ========== タスク ==========
+async function loadTasks() {
+    const { data, error } = await sb
+        .from('agent_tasks')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+    if (error) {
+        console.error('Error loading tasks:', error);
+        document.getElementById('tasks-container').innerHTML =
+            '<div class="empty-state"><div class="icon">⚠️</div><p>タスクの読み込みに失敗しました</p></div>';
+        return;
+    }
+
+    tasks = data || [];
+    renderTasks();
+    updateCurrentPhase();
+}
+
+function renderTasks() {
+    const container = document.getElementById('tasks-container');
+
+    if (!tasks.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>タスクはまだありません</p></div>';
+        return;
+    }
+
+    container.innerHTML = tasks.map(task => `
+        <div class="task-card ${task.status}">
+            <div class="task-header">
+                <div class="task-title">${esc(task.title)}</div>
+                <div class="task-status ${task.status}">${getTaskStatusText(task.status)}</div>
+            </div>
+            <div class="task-meta">${task.task_type} • ${task.phase}</div>
+            <div class="task-agents">
+                <span class="task-agent-badge">${esc(task.from_agent)}</span>
+                <span class="task-arrow">→</span>
+                <span class="task-agent-badge">${esc(task.to_agent)}</span>
+            </div>
+            ${task.status === 'running' && task.progress > 0 ? `
+                <div class="task-progress">
+                    <div class="task-progress-fill" style="width: ${task.progress}%"></div>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function getTaskStatusText(status) {
+    const map = {
+        pending: '待機中',
+        running: '実行中',
+        done: '完了',
+        failed: '失敗',
+        cancelled: 'キャンセル'
+    };
+    return map[status] || status;
+}
+
+function updateCurrentPhase() {
+    // 最新の running または pending タスクからフェーズを判定
+    const activeTask = tasks.find(t => t.status === 'running' || t.status === 'pending');
+    if (activeTask) {
+        currentPhase = activeTask.phase;
+    }
+
+    document.querySelectorAll('.phase-item').forEach(el => {
+        const phase = el.dataset.phase;
+        el.classList.toggle('active', phase === PHASE_MAP[currentPhase]);
+    });
+}
+
+// ========== Realtime ==========
+function setupRealtime() {
+    sb.channel('agent-hub')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_tasks' }, () => {
+            loadTasks();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_status' }, () => {
+            loadAgentStatuses();
+        })
+        .subscribe((status) => {
+            updateConnectionStatus(status === 'SUBSCRIBED');
+        });
+}
+
+function updateConnectionStatus(online) {
+    const el = document.getElementById('conn-status');
+    el.textContent = online ? '● オンライン' : '● オフライン';
+    el.className = 'conn-status ' + (online ? 'online' : 'offline');
+}
+
+// ========== モーダル ==========
+function openModal() {
+    document.getElementById('task-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('task-modal').classList.add('hidden');
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-description').value = '';
+}
+
+async function createTask() {
+    const title = document.getElementById('task-title').value.trim();
+    const toAgent = document.getElementById('task-to-agent').value;
+    const taskType = document.getElementById('task-type').value;
+    const phase = document.getElementById('task-phase').value;
+    const description = document.getElementById('task-description').value.trim();
+
+    if (!title) {
+        alert('タイトルを入力してください');
+        return;
+    }
+
+    const { error } = await sb.from('agent_tasks').insert({
+        sprint_name: 'agent-orchestration',
+        phase: phase,
+        from_agent: 'user',
+        to_agent: toAgent,
+        task_type: taskType,
+        title: title,
+        description: description || null,
+        status: 'pending',
+        progress: 0
+    });
+
+    if (error) {
+        alert('タスクの作成に失敗しました: ' + error.message);
+        return;
+    }
+
+    closeModal();
+}
+
+// ========== ユーティリティ ==========
+function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ========== 起動 ==========
+init();
+</script>
+
+</body>
+</html>

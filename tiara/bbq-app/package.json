@@ -1,0 +1,14 @@
+{
+  "name": "bbq-app-tests",
+  "version": "1.0.0",
+  "description": "BBQ App 自動テスト（Tiara担当）",
+  "type": "module",
+  "scripts": {
+    "test:unit": "node --test unit/logic.test.mjs",
+    "test:e2e": "npx playwright test",
+    "test:all": "node --test unit/logic.test.mjs && npx playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  }
+}

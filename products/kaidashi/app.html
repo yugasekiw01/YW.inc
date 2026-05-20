@@ -8,6 +8,8 @@
     <meta property="og:title" content="🛒 カイダシ">
     <meta property="og:description" content="買い出しをみんなで管理しよう！">
     <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
     <!-- PWA対応 -->
     <link rel="manifest" href="/manifest.json">
@@ -68,25 +70,40 @@
         }
         .header-back:hover { background: rgba(255,255,255,0.38); }
 
-        .share-btn {
+        .header-menu-btn {
             position: absolute; top: 14px; right: 14px;
             background: rgba(255,255,255,0.22); color: white;
             border: 1.5px solid rgba(255,255,255,0.3);
-            border-radius: 20px; padding: 6px 14px;
-            font-size: 0.85rem; font-family: inherit;
-            cursor: pointer; transition: all 0.18s; z-index: 1;
+            border-radius: 50%; width: 40px; height: 40px;
+            font-size: 1.2rem; font-family: inherit;
+            cursor: pointer; transition: all 0.18s; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
         }
-        .share-btn:hover { background: rgba(255,255,255,0.38); }
+        .header-menu-btn:hover { background: rgba(255,255,255,0.38); }
 
-        .delete-event-btn {
-            position: absolute; top: 14px; right: 80px;
-            background: rgba(255,100,100,0.3); color: white;
-            border: 1.5px solid rgba(255,255,255,0.3);
-            border-radius: 20px; padding: 6px 10px;
-            font-size: 0.85rem; font-family: inherit;
-            cursor: pointer; transition: all 0.18s; z-index: 1;
+        .header-dropdown {
+            position: fixed; top: 70px; right: 14px;
+            background: white; border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            min-width: 180px; z-index: 200;
+            animation: dropIn 0.2s ease;
         }
-        .delete-event-btn:hover { background: rgba(255,80,80,0.5); }
+        .header-dropdown.hidden { display: none; }
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 18px; font-size: 0.95rem;
+            color: #333; cursor: pointer; transition: background 0.15s;
+            border: none; background: none; width: 100%;
+            font-family: inherit; text-align: left;
+        }
+        .dropdown-item:hover { background: #F0FBF7; }
+        .dropdown-item.danger { color: #E74C3C; }
+        .dropdown-item.danger:hover { background: #FFF0F0; }
+        .dropdown-divider { height: 1px; background: #EEE; margin: 4px 0; }
 
         /* ---- タブ ---- */
         .tabs {
@@ -538,9 +555,15 @@ if (!EVENT_CODE) location.href = 'index.html';
     <a class="header-back" href="index.html">← トップ</a>
     <h1>🛒 カイダシ</h1>
     <p id="event-name-display">読み込み中…</p>
-    <button class="share-btn" onclick="shareEvent()">🔗 共有</button>
-    <button class="delete-event-btn" onclick="deleteEvent()">🗑️</button>
+    <button class="header-menu-btn" onclick="toggleHeaderMenu()">⋯</button>
 </header>
+
+<!-- ヘッダーメニュー（header外に配置） -->
+<div class="header-dropdown hidden" id="header-dropdown">
+    <button class="dropdown-item" onclick="shareEvent(); closeHeaderMenu();">🔗 URLを共有</button>
+    <div class="dropdown-divider"></div>
+    <button class="dropdown-item danger" onclick="deleteEvent()">🗑️ イベントを削除</button>
+</div>
 
 <div class="tabs">
     <button class="tab-btn active" id="tab-btn-list" onclick="switchTab('list')">🛒 買い出しリスト</button>
@@ -551,10 +574,9 @@ if (!EVENT_CODE) location.href = 'index.html';
     <div class="add-form">
         <div class="input-row">
             <input type="text" id="item-name" placeholder="品目を入力" autocomplete="off" style="flex: 1;" />
-            <input type="number" id="item-quantity" placeholder="数量" style="width: 70px;" min="0" inputmode="numeric" />
-            <select id="item-unit" style="width: 70px;">
-                <option value="">単位</option>
-                <option value="個">個</option>
+            <input type="number" id="item-quantity" value="1" style="width: 70px;" min="1" inputmode="numeric" />
+            <select id="item-unit" style="width: 60px; font-size: 0.9rem; padding: 12px 8px;">
+                <option value="個" selected>個</option>
                 <option value="g">g</option>
                 <option value="ml">ml</option>
             </select>
@@ -703,8 +725,17 @@ async function initEvent() {
     document.getElementById('event-name-display').textContent = eventName;
     saveRecentEvent(EVENT_CODE, eventName);
     document.getElementById('main-content').classList.remove('hidden');
-    if (!myName) { showNameModal(); }
-    else { sb.from('participants').upsert({ name: myName, event_id: eventId }, { onConflict: 'event_id,name' }); }
+
+    // このイベントに参加済みか確認
+    const { data: existingParticipants } = await sb.from('participants').select('name').eq('event_id', eventId);
+    const participantNames = (existingParticipants || []).map(p => p.name);
+    const alreadyJoined = myName && participantNames.includes(myName);
+
+    if (!alreadyJoined) {
+        // 初めてのイベント → 名前入力（前回の名前をデフォルトに）
+        document.getElementById('name-input').value = myName || '';
+        showNameModal();
+    }
     sb.channel(`kaidashi-items-${EVENT_CODE}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `event_id=eq.${eventId}` }, () => load())
         .subscribe(s => setConn(s === 'SUBSCRIBED'));
@@ -728,6 +759,22 @@ function shareEvent() {
     if (navigator.share) { navigator.share({ title: `🛒 ${eventName} | カイダシ`, url }); }
     else { navigator.clipboard.writeText(url).then(() => alert('URLをコピーしました！')); }
 }
+
+function toggleHeaderMenu() {
+    const dropdown = document.getElementById('header-dropdown');
+    dropdown.classList.toggle('hidden');
+}
+function closeHeaderMenu() {
+    document.getElementById('header-dropdown').classList.add('hidden');
+}
+// メニュー外クリックで閉じる
+document.addEventListener('click', e => {
+    const dropdown = document.getElementById('header-dropdown');
+    const menuBtn = document.querySelector('.header-menu-btn');
+    if (dropdown && !dropdown.classList.contains('hidden') && !dropdown.contains(e.target) && !menuBtn.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
 
 async function deleteEvent() {
     if (!eventId) return;

@@ -21,6 +21,15 @@ Set-Service -Name sshd -StartupType Automatic
 
 機能単位のアジャイル × W モデル。詳細は [`docs/sprint-flow.md`](docs/sprint-flow.md) を参照。
 
+## レート制限対策
+
+Claude Code を長時間使うためのベストプラクティス：
+
+- **定期的に `/compact` を実行**してコンテキストを圧縮
+- **verbose mode off** で不要な出力を減らす（設定または `/config` で変更）
+- 大きいファイルは `limit`/`offset` パラメータで部分読み込み
+- 軽いタスクは Haiku や Sonnet を使う（Opus は重要な判断のみ）
+
 ## YW.inc 組織構成
 
 | エージェント | 役割 | キャラクター | ディレクトリ |
@@ -31,6 +40,21 @@ Set-Service -Name sshd -StartupType Automatic
 | Tiara | テスト | - | tiara/ |
 | Imai | 保守・インフラ | 26歳、ちょっとあほだけど信頼できる男友達 | imai/ |
 | Pino（予定） | 広告・Git関連 | 子供のようなあどけなさがある弟的存在。好奇心を真っ直ぐに伝える子 | pino/ |
+
+## Agent Hub（エージェント連携システム）
+
+スマホからリアルタイムで全エージェントの進捗を確認できるダッシュボード。
+
+- **アクセス**: claude-pwa-clientの📊ボタン
+- **Supabase**: `pemepunzxrvmsvjjhsry` (yw-agent-hub)
+
+### 必須ルール
+各エージェントは作業時に以下を実行すること：
+1. **作業開始時**: 自分のstatus → `busy`
+2. **作業完了時**: 自分のstatus → `idle`
+3. **タスク引き継ぎ時**: `agent_tasks`にレコード作成
+
+詳細手順: [`docs/agent-hub-usage.md`](docs/agent-hub-usage.md)
 
 ## Products
 

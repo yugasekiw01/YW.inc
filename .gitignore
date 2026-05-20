@@ -12,3 +12,6 @@ Thumbs.db
 .vscode/
 *.swp
 **/.env.local
+
+# Local Netlify folder
+.netlify
