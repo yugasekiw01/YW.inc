@@ -8,9 +8,6 @@
     <meta property="og:title" content="🛒 カイダシ">
     <meta property="og:description" content="買い出しをみんなで管理しよう！">
     <meta property="og:type" content="website">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
     <!-- PWA対応 -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1ABC9C">
@@ -19,10 +16,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="カイダシ">
     <style>
+        @font-face {
+            font-family: 'Kiwi Maru';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/fonts/KiwiMaru-Regular.ttf') format('truetype');
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Yomogi', -apple-system, sans-serif;
+            font-family: 'Kiwi Maru', -apple-system, sans-serif;
             background: linear-gradient(160deg, #E8FAF4 0%, #F0FBF7 60%, #E4F7EF 100%);
             min-height: 100vh;
             padding-bottom: 100px;
@@ -963,8 +967,21 @@ async function voteItem(id) {
     const voters = item.voters || [];
     const newVoters = voters.includes(myName) ? voters.filter(v => v !== myName) : [...voters, myName];
     await sb.from('items').update({ voters: newVoters }).eq('id', id).eq('event_id', eventId);
+    // 即時反映のためローカルも更新
+    item.voters = newVoters;
+    render();
 }
-async function deleteItem(id) { if (confirm('このアイテムを削除しますか？')) await sb.from('items').delete().eq('id', id).eq('event_id', eventId); }
+async function deleteItem(id) {
+    if (confirm('このアイテムを削除しますか？')) {
+        const { error } = await sb.from('items').delete().eq('id', id).eq('event_id', eventId);
+        if (error) {
+            console.error('Delete error:', error);
+            alert('削除に失敗しました');
+        } else {
+            await load(); // 削除後にリストを再読み込み
+        }
+    }
+}
 
 // ========== カテゴリ変更 ==========
 let catChangeItemId = null;

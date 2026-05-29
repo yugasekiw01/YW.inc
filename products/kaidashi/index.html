@@ -8,9 +8,6 @@
     <meta property="og:title" content="🛒 カイダシ">
     <meta property="og:description" content="イベントごとに買い出しと割り勘をみんなで管理！">
     <meta property="og:type" content="website">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
     <!-- PWA対応 -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1ABC9C">
@@ -19,10 +16,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="カイダシ">
     <style>
+        @font-face {
+            font-family: 'Kiwi Maru';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/fonts/KiwiMaru-Regular.ttf') format('truetype');
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Yomogi', -apple-system, sans-serif;
+            font-family: 'Kiwi Maru', -apple-system, sans-serif;
             background: linear-gradient(160deg, #E8FAF4 0%, #F0FBF7 50%, #E4F7EF 100%);
             min-height: 100vh;
             display: flex;
@@ -79,65 +83,6 @@
             margin-top: 4px;
             color: #A8D8CC;
             letter-spacing: 0.1em;
-        }
-
-        /* ---- イラストエリア ---- */
-        .illustration-area {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            height: 60px;
-            margin-bottom: 16px;
-            z-index: 1;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
-        .float-emoji {
-            font-size: 2rem;
-            animation: floatEmoji 4s ease-in-out infinite;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
-        }
-        .float-emoji:nth-child(1) { animation-delay: 0s; }
-        .float-emoji:nth-child(2) { animation-delay: 0.8s; }
-        .float-emoji:nth-child(3) { animation-delay: 0.4s; }
-        .float-emoji:nth-child(4) { animation-delay: 1.2s; }
-        .float-emoji:nth-child(5) { animation-delay: 0.6s; }
-        @keyframes floatEmoji {
-            0%, 100% { transform: translateY(0) rotate(-5deg); opacity: 0.9; }
-            50%      { transform: translateY(-12px) rotate(5deg); opacity: 1; }
-        }
-
-        /* ---- シーン選択 ---- */
-        .scene-selector {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-        .scene-chip {
-            background: #F0FBF7;
-            border: 2px solid #C8EDE6;
-            border-radius: 20px;
-            padding: 8px 14px;
-            font-size: 0.9rem;
-            font-family: inherit;
-            color: #2C7A6C;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .scene-chip:hover {
-            background: #E0F5EE;
-            border-color: #A8DED4;
-        }
-        .scene-chip.selected {
-            background: linear-gradient(135deg, #1ABC9C, #2ECC71);
-            border-color: transparent;
-            color: white;
-            box-shadow: 0 4px 12px rgba(26,188,156,0.3);
         }
 
         /* ---- カード ---- */
@@ -317,13 +262,6 @@
                 max-width: 480px;
                 padding: 32px 28px;
             }
-            .illustration-area {
-                max-width: 480px;
-            }
-            .scene-chip {
-                padding: 10px 18px;
-                font-size: 1rem;
-            }
             input[type="text"] {
                 font-size: 1.15rem;
                 padding: 16px 20px;
@@ -344,29 +282,9 @@
     <div class="hero-deco">✦ ✦ ✦</div>
 </div>
 
-<!-- イラストエリア -->
-<div class="illustration-area" id="illustration-area">
-    <span class="float-emoji">🛒</span>
-    <span class="float-emoji">🥦</span>
-    <span class="float-emoji">🍞</span>
-    <span class="float-emoji">🥛</span>
-    <span class="float-emoji">🧴</span>
-</div>
-
 <!-- イベント作成 -->
 <div class="card">
     <div class="card-title">🌿 新しいイベントを作成</div>
-
-    <!-- シーン選択 -->
-    <div class="scene-selector" id="scene-selector">
-        <button type="button" class="scene-chip selected" data-scene="daily">🛒 日々の買い物</button>
-        <button type="button" class="scene-chip" data-scene="bbq">🍖 BBQ</button>
-        <button type="button" class="scene-chip" data-scene="camp">⛺ キャンプ</button>
-        <button type="button" class="scene-chip" data-scene="party">🎉 パーティー</button>
-        <button type="button" class="scene-chip" data-scene="picnic">🧺 ピクニック</button>
-        <button type="button" class="scene-chip" data-scene="other">📝 その他</button>
-    </div>
-
     <input type="text" id="event-name-input"
         placeholder="例: 夏の買い出し・歓迎会の準備"
         maxlength="30" autocomplete="off" />
@@ -394,7 +312,7 @@
         </div>
         <div class="url-display" id="event-url" onclick="copyUrl()"></div>
         <div class="copy-hint" id="copy-hint">タップでコピー</div>
-        <button class="btn-open" id="open-btn">このイベントを開く 🛒</button>
+        <button class="btn-open" id="open-btn" onclick="openEvent()">このイベントを開く 🛒</button>
         <button class="btn-close" onclick="closeModal()">あとで開く</button>
     </div>
 </div>
@@ -407,28 +325,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// シーン別の絵文字
-const sceneEmojis = {
-    daily:  ['🛒', '🥦', '🍞', '🥛', '🧴'],
-    bbq:    ['🍖', '🔥', '🥩', '🌽', '🍺'],
-    camp:   ['⛺', '🏕️', '🔦', '🪵', '🌲'],
-    party:  ['🎉', '🎈', '🎂', '🍕', '🥤'],
-    picnic: ['🧺', '🥪', '🍎', '🧃', '🌸'],
-    other:  ['🧺', '🥖', '🍎', '🧃', '🥬']
-};
-
-// シーン別のサンプルアイテム
-const sampleItems = {
-    daily:  [],
-    bbq:    ['お肉', '野菜セット', '焼き鳥', 'タレ・塩', '紙皿・割り箸'],
-    camp:   ['飲み物', '朝食用パン', 'カップ麺', 'お菓子', '氷'],
-    party:  ['ピザ', 'お菓子', 'ジュース', 'ケーキ', '紙コップ'],
-    picnic: ['おにぎり', 'サンドイッチ', 'フルーツ', '飲み物', 'レジャーシート'],
-    other:  []
-};
-
-let selectedScene = 'daily';
 
 function generateEventCode() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -470,23 +366,7 @@ function saveRecentEvent(code, name) {
 }
 
 let createdEventUrl = '';
-
-// シーン選択時のイラスト更新
-function updateIllustration(scene) {
-    const area = document.getElementById('illustration-area');
-    const emojis = sceneEmojis[scene] || sceneEmojis.other;
-    area.innerHTML = emojis.map(e => `<span class="float-emoji">${e}</span>`).join('');
-}
-
-// シーンチップのクリック処理
-document.getElementById('scene-selector').addEventListener('click', e => {
-    const chip = e.target.closest('.scene-chip');
-    if (!chip) return;
-    document.querySelectorAll('.scene-chip').forEach(c => c.classList.remove('selected'));
-    chip.classList.add('selected');
-    selectedScene = chip.dataset.scene;
-    updateIllustration(selectedScene);
-});
+let createdEventCode = '';
 
 async function createEvent() {
     const nameInput = document.getElementById('event-name-input');
@@ -506,24 +386,23 @@ async function createEvent() {
 
         if (error) { console.error('Create error:', error); errorEl.textContent = '作成に失敗しました。もう一度お試しください。'; return; }
 
-        // サンプルアイテム追加
-        const samples = sampleItems[selectedScene] || [];
-        if (samples.length > 0) {
-            const itemsToInsert = samples.map(itemName => ({
-                event_id: data.id,
-                name: itemName,
-                checked: false
-            }));
-            await sb.from('items').insert(itemsToInsert);
-        }
-
         saveRecentEvent(data.event_code, data.name);
-        const eventUrl = `app.html?event=${data.event_code}`;
+        createdEventCode = data.event_code;
+        createdEventUrl = `${location.origin}${location.pathname.replace('index.html','')}app.html?event=${data.event_code}`;
 
-        // 作成成功 → 直接イベントページへ遷移
+        // 成功モーダル表示
+        document.getElementById('event-url').textContent = createdEventUrl;
+        try {
+            const qrContainer = document.getElementById('qr-code');
+            qrContainer.innerHTML = '';
+            QRCode.toCanvas(qrContainer, createdEventUrl, { width: 140, margin: 1 }, err => {
+                if (err) console.error('QR error:', err);
+            });
+        } catch (e) { console.error('QR generation failed:', e); }
+
+        document.getElementById('success-modal').classList.remove('hidden');
         nameInput.value = '';
         loadRecentEvents();
-        location.href = eventUrl;
     } finally {
         btn.disabled = false;
         btn.textContent = '🛒 イベントを作成する';
@@ -540,6 +419,8 @@ function copyUrl() {
 }
 
 function closeModal() { document.getElementById('success-modal').classList.add('hidden'); }
+
+function openEvent() { location.href = `app.html?event=${createdEventCode}`; }
 
 async function deleteEvent(code, name) {
     if (!confirm(`「${name}」を削除しますか？\n\n⚠️ このイベントの全てのデータが削除されます。`)) return;

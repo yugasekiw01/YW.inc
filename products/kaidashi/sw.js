@@ -1,11 +1,11 @@
-const CACHE_NAME = 'kaidashi-v3.7';
+const CACHE_NAME = 'kaidashi-v4.0';
 const urlsToCache = [
   '/',
   '/index.html',
   '/app.html',
+  '/fonts/KiwiMaru-Regular.ttf',
   '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Yomogi&display=swap'
+  '/icons/icon-512.png'
 ];
 
 // インストール時にキャッシュ
