@@ -1056,7 +1056,7 @@ let quantityChangeItemId = null;
 function openQuantityModal(id) {
     quantityChangeItemId = id;
     // 現在の個数・単位を取得
-    const item = allItems.find(i => i.id === id);
+    const item = items.find(i => i.id === id);
     if (item) {
         document.getElementById('quantity-input').value = item.quantity || '';
         document.getElementById('unit-input').value = item.unit || '';
