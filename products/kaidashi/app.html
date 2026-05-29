@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <!-- v3.12.2 -->
+    <!-- v3.12.3 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🛒 カイダシ</title>
@@ -1193,8 +1193,17 @@ async function updateQuantity() {
 
     const unitSelect = document.getElementById('unit-input');
     const customUnitInput = document.getElementById('unit-input-custom');
-    let unit = unitSelect.value === '__custom__' ? customUnitInput.value.trim() : unitSelect.value;
-    if (!unit) unit = null;
+    const customUnitWrap = document.getElementById('unit-input-custom-wrap');
+
+    // カスタム入力が表示されている場合はそちらを優先
+    let unit;
+    if (customUnitWrap.style.display !== 'none') {
+        unit = customUnitInput.value.trim() || null;
+    } else {
+        unit = unitSelect.value || null;
+    }
+
+    console.log('updateQuantity:', { quantity, unit, itemId: quantityChangeItemId, eventId });
 
     const { error } = await sb.from('items').update({
         quantity,
@@ -1203,7 +1212,7 @@ async function updateQuantity() {
     }).eq('id', quantityChangeItemId).eq('event_id', eventId);
     if (error) {
         console.error('Update quantity error:', error);
-        alert('更新に失敗しました');
+        alert(`更新に失敗しました: ${error.message || JSON.stringify(error)}`);
     } else {
         closeQuantityModal();
         await load(); // 更新後にリストを再読み込み
