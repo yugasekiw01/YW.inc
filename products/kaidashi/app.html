@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <!-- v3.10.4 -->
+    <!-- v3.12.0 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🛒 カイダシ</title>
@@ -990,20 +990,48 @@ function buildVotersHtml(voters) {
 function toggleVoters(el) { const w = el.closest('.voters-wrap'); w.querySelector('.voters-short').classList.toggle('hidden'); w.querySelector('.voters-full').classList.toggle('hidden'); }
 
 // ========== アイテム操作 ==========
+function toggleCustomUnit(context) {
+    if (context === 'add') {
+        const select = document.getElementById('item-unit');
+        const customInput = document.getElementById('item-unit-custom');
+        if (select.value === '__custom__') {
+            select.style.display = 'none';
+            customInput.style.display = 'block';
+            customInput.focus();
+        }
+    } else if (context === 'modal') {
+        const select = document.getElementById('unit-input');
+        const customInput = document.getElementById('unit-input-custom');
+        if (select.value === '__custom__') {
+            select.style.display = 'none';
+            customInput.style.display = 'block';
+            customInput.focus();
+        }
+    }
+}
+
 const addBtn = document.getElementById('add-btn');
 async function addItem() {
     if (!eventId) return;
     const name = document.getElementById('item-name').value.trim();
     const category = document.getElementById('item-category').value;
     const quantity = parseInt(document.getElementById('item-quantity').value) || null;
-    const unit = document.getElementById('item-unit').value || null;
+
+    const unitSelect = document.getElementById('item-unit');
+    const customUnitInput = document.getElementById('item-unit-custom');
+    let unit = unitSelect.value === '__custom__' ? customUnitInput.value.trim() : unitSelect.value;
+    if (!unit) unit = null;
+
     if (!name) { document.getElementById('item-name').focus(); return; }
     addBtn.disabled = true;
     try {
         await sb.from('items').insert({ name, category, quantity, unit, checked: false, added_by: myName || null, event_id: eventId });
         document.getElementById('item-name').value = '';
         document.getElementById('item-quantity').value = '1';
-        document.getElementById('item-unit').value = '個';
+        unitSelect.value = '個';
+        customUnitInput.value = '';
+        unitSelect.style.display = 'block';
+        customUnitInput.style.display = 'none';
         document.getElementById('item-name').focus();
     } finally { addBtn.disabled = false; }
 }
@@ -1089,22 +1117,52 @@ async function changeCategory(newCat) {
 let quantityChangeItemId = null;
 function openQuantityModal(id) {
     quantityChangeItemId = id;
+    const unitSelect = document.getElementById('unit-input');
+    const customUnitInput = document.getElementById('unit-input-custom');
+
     // 現在の個数・単位を取得
     const item = items.find(i => i.id === id);
     if (item) {
         document.getElementById('quantity-input').value = item.quantity || '';
-        document.getElementById('unit-input').value = item.unit || '';
+
+        // プリセットの単位リスト
+        const presetUnits = ['個', '本', '袋', 'パック', 'kg', 'g', 'L', 'ml'];
+
+        if (item.unit && presetUnits.includes(item.unit)) {
+            // プリセット単位の場合
+            unitSelect.value = item.unit;
+            unitSelect.style.display = 'block';
+            customUnitInput.style.display = 'none';
+            customUnitInput.value = '';
+        } else {
+            // カスタム単位の場合
+            unitSelect.value = '__custom__';
+            unitSelect.style.display = 'none';
+            customUnitInput.value = item.unit || '';
+            customUnitInput.style.display = 'block';
+        }
     }
     document.getElementById('quantity-modal').classList.remove('hidden');
 }
 function closeQuantityModal() {
     document.getElementById('quantity-modal').classList.add('hidden');
+    const unitSelect = document.getElementById('unit-input');
+    const customUnitInput = document.getElementById('unit-input-custom');
+    unitSelect.value = '個';
+    unitSelect.style.display = 'block';
+    customUnitInput.value = '';
+    customUnitInput.style.display = 'none';
     quantityChangeItemId = null;
 }
 async function updateQuantity() {
     if (!quantityChangeItemId) return;
     const quantity = parseInt(document.getElementById('quantity-input').value) || null;
-    const unit = document.getElementById('unit-input').value || null;
+
+    const unitSelect = document.getElementById('unit-input');
+    const customUnitInput = document.getElementById('unit-input-custom');
+    let unit = unitSelect.value === '__custom__' ? customUnitInput.value.trim() : unitSelect.value;
+    if (!unit) unit = null;
+
     const { error } = await sb.from('items').update({
         quantity,
         unit,
