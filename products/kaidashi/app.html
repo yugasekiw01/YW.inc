@@ -304,7 +304,7 @@
         .item.checked { opacity: 0.45; }
         .item.checked .item-name { text-decoration: line-through; }
         .item-checkbox { width: 24px; height: 24px; cursor: pointer; accent-color: #1ABC9C; flex-shrink: 0; }
-        .item-name { font-size: 1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-name { font-size: 1rem; font-weight: 700; white-space: normal; word-break: break-word; }
         .checker { font-size: 0.72rem; color: #2ECC71; font-weight: 700; margin-top: 2px; }
         .voters-wrap { margin-top: 3px; }
         .voters-short, .voters-full {
@@ -927,10 +927,7 @@ function render() {
         const group = grouped[cat]; if (!group?.length) return;
         html += `<div class="category-section"><div class="category-title">${CAT_ICONS[cat]} ${esc(cat)}</div>`;
         group.forEach(item => {
-            const voters = item.voters || [], voted = voters.includes(myName);
             const checkerHtml = item.checked && item.checked_by ? `<div class="checker">✓ ${esc(item.checked_by)}</div>` : '';
-            const votersHtml = buildVotersHtml(voters);
-            const showVoteButton = participants.length > 1;
             // 数量・単位の表示（プラスマイナスボタン付き）
             const qty = item.quantity || 1;
             const unit = item.unit || '個';
@@ -950,9 +947,8 @@ function render() {
                 <div class="checkbox-wrap" onclick="toggleItemWithUndo('${esc(item.id)}',${item.checked},'${esc(item.name)}')">
                     <input type="checkbox" class="item-checkbox" ${item.checked?'checked':''} style="pointer-events:none;">
                 </div>
-                <div class="item-info"><div class="item-name">${esc(item.name)}</div>${checkerHtml}${votersHtml}</div>
+                <div class="item-info"><div class="item-name">${esc(item.name)}</div>${checkerHtml}</div>
                 ${quantityControlsHtml}
-                ${showVoteButton ? `<button class="vote-btn ${voted?'voted':''}" onclick="voteItem('${esc(item.id)}')">✋ ホシイ！${voters.length?' '+voters.length:''}</button>` : ''}
                 <button class="cat-btn" onclick="openCatModal('${esc(item.id)}')">${CAT_ICONS[CATEGORIES.includes(item.category)?item.category:'その他']||'📦'}</button>
                 <button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>
             </div>`;
