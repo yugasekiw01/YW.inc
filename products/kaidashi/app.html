@@ -327,6 +327,27 @@
             border-radius: 8px; transition: all 0.18s; flex-shrink: 0;
         }
         .cat-btn:hover { background: #E8E8E8; color: #555; }
+        .quantity-badge {
+            background: linear-gradient(135deg, #E3F8F3, #D0F2E9);
+            color: #1ABC9C; font-weight: 700; font-size: 0.85rem;
+            padding: 4px 10px; border-radius: 12px;
+            cursor: pointer; transition: all 0.18s;
+            display: inline-block; border: 1.5px solid rgba(26,188,156,0.2);
+        }
+        .quantity-badge:hover {
+            background: linear-gradient(135deg, #C8F0E4, #B8EBD9);
+            border-color: rgba(26,188,156,0.4);
+            transform: scale(1.05);
+        }
+        .quantity-badge.add-quantity {
+            background: rgba(26,188,156,0.1);
+            color: #8ABFB0; font-weight: 600;
+            border-style: dashed;
+        }
+        .quantity-badge.add-quantity:hover {
+            background: rgba(26,188,156,0.2);
+            color: #1ABC9C;
+        }
         .cat-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5);
             display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
@@ -695,6 +716,29 @@ if (!EVENT_CODE) location.href = 'index.html';
     </div>
 </div>
 
+<!-- 個数変更モーダル -->
+<div class="cat-modal hidden" id="quantity-modal">
+    <div class="cat-modal-box">
+        <div class="cat-modal-title">🔢 個数を変更</div>
+        <div style="display: flex; gap: 10px; margin-bottom: 16px; justify-content: center; align-items: center;">
+            <input type="number" id="quantity-input" min="0" placeholder="個数" style="width: 80px; padding: 10px; font-size: 1rem; border: 2px solid #E8E8E8; border-radius: 10px; text-align: center;" inputmode="numeric" />
+            <select id="unit-input" style="padding: 10px; font-size: 1rem; border: 2px solid #E8E8E8; border-radius: 10px;">
+                <option value="">単位</option>
+                <option value="個">個</option>
+                <option value="本">本</option>
+                <option value="袋">袋</option>
+                <option value="パック">パック</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="L">L</option>
+                <option value="ml">ml</option>
+            </select>
+        </div>
+        <button onclick="updateQuantity()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #1ABC9C, #2ECC71); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-bottom: 8px;">保存</button>
+        <div class="cat-cancel" onclick="closeQuantityModal()">キャンセル</div>
+    </div>
+</div>
+
 <div class="conn-status online" id="conn-status">● オンライン</div>
 
 </div><!-- /main-content -->
@@ -859,15 +903,19 @@ function render() {
             const checkerHtml = item.checked && item.checked_by ? `<div class="checker">✓ ${esc(item.checked_by)}</div>` : '';
             const votersHtml = buildVotersHtml(voters);
             const showVoteButton = participants.length > 1;
-            // 数量・単位の表示
+            // 数量・単位の表示（クリック可能）
             let displayName = esc(item.name);
+            let quantityHtml = '';
             if (item.quantity && item.unit) {
-                displayName += ` <strong>${item.quantity}${item.unit}</strong>`;
+                quantityHtml = `<span class="quantity-badge" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="クリックで編集">${item.quantity}${item.unit}</span>`;
             } else if (item.quantity) {
-                displayName += ` <strong>${item.quantity}</strong>`;
+                quantityHtml = `<span class="quantity-badge" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="クリックで編集">${item.quantity}</span>`;
             } else if (item.unit) {
-                displayName += ` <strong>${item.unit}</strong>`;
+                quantityHtml = `<span class="quantity-badge" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="クリックで編集">${item.unit}</span>`;
+            } else {
+                quantityHtml = `<span class="quantity-badge add-quantity" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="クリックで個数を追加">+個数</span>`;
             }
+            displayName += ` ${quantityHtml}`;
             html += `<div class="item ${item.checked?'checked':''}" data-cat="${esc(item.category)}">
                 <div class="checkbox-wrap" onclick="toggleItemWithUndo('${esc(item.id)}',${item.checked},'${esc(item.name)}')">
                     <input type="checkbox" class="item-checkbox" ${item.checked?'checked':''} style="pointer-events:none;">
@@ -1001,6 +1049,36 @@ async function changeCategory(newCat) {
     if (!catChangeItemId) return;
     await sb.from('items').update({ category: newCat }).eq('id', catChangeItemId).eq('event_id', eventId);
     closeCatModal();
+}
+
+// ========== 個数変更 ==========
+let quantityChangeItemId = null;
+function openQuantityModal(id) {
+    quantityChangeItemId = id;
+    // 現在の個数・単位を取得
+    const item = allItems.find(i => i.id === id);
+    if (item) {
+        document.getElementById('quantity-input').value = item.quantity || '';
+        document.getElementById('unit-input').value = item.unit || '';
+    }
+    document.getElementById('quantity-modal').classList.remove('hidden');
+}
+function closeQuantityModal() {
+    document.getElementById('quantity-modal').classList.add('hidden');
+    quantityChangeItemId = null;
+}
+async function updateQuantity() {
+    if (!quantityChangeItemId) return;
+    const quantity = parseInt(document.getElementById('quantity-input').value) || null;
+    const unit = document.getElementById('unit-input').value || null;
+    const { error } = await sb.from('items').update({ quantity, unit }).eq('id', quantityChangeItemId).eq('event_id', eventId);
+    if (error) {
+        console.error('Update quantity error:', error);
+        alert('更新に失敗しました');
+    } else {
+        closeQuantityModal();
+        await load(); // 更新後にリストを再読み込み
+    }
 }
 
 // ========== タブ ==========
