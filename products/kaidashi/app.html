@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <!-- v3.12.0 -->
+    <!-- v3.12.1 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🛒 カイダシ</title>
@@ -625,17 +625,18 @@ if (!EVENT_CODE) location.href = '/';
         <div class="input-row">
             <input type="text" id="item-name" placeholder="品目を入力" autocomplete="off" style="flex: 1;" />
             <input type="number" id="item-quantity" value="1" style="width: 70px;" min="1" inputmode="numeric" />
-            <input type="text" id="item-unit" list="unit-options-add" value="個" style="width: 60px; font-size: 0.9rem; padding: 12px 8px; text-align: center;" autocomplete="off" />
-            <datalist id="unit-options-add">
-                <option value="個">
-                <option value="本">
-                <option value="袋">
-                <option value="パック">
-                <option value="kg">
-                <option value="g">
-                <option value="L">
-                <option value="ml">
-            </datalist>
+            <select id="item-unit" style="width: 70px; font-size: 0.9rem; padding: 12px 8px; text-align: center;" onchange="toggleCustomUnit('add')">
+                <option value="個">個</option>
+                <option value="本">本</option>
+                <option value="袋">袋</option>
+                <option value="パック">パック</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="L">L</option>
+                <option value="ml">ml</option>
+                <option value="__custom__">その他...</option>
+            </select>
+            <input type="text" id="item-unit-custom" placeholder="単位入力" style="width: 70px; font-size: 0.9rem; padding: 12px 8px; text-align: center; display: none;" autocomplete="off" />
         </div>
         <select id="item-category">
             <option value="食べ物">🍽️ 食べ物</option>
@@ -753,17 +754,18 @@ if (!EVENT_CODE) location.href = '/';
         <div class="cat-modal-title">🔢 個数を変更</div>
         <div style="display: flex; gap: 10px; margin-bottom: 16px; justify-content: center; align-items: center;">
             <input type="number" id="quantity-input" min="0" placeholder="個数" style="width: 80px; padding: 10px; font-size: 1rem; border: 2px solid #E8E8E8; border-radius: 10px; text-align: center;" inputmode="numeric" />
-            <input type="text" id="unit-input" list="unit-options" placeholder="単位" style="width: 100px; padding: 10px; font-size: 1rem; border: 2px solid #E8E8E8; border-radius: 10px; text-align: center;" autocomplete="off" />
-            <datalist id="unit-options">
-                <option value="個">
-                <option value="本">
-                <option value="袋">
-                <option value="パック">
-                <option value="kg">
-                <option value="g">
-                <option value="L">
-                <option value="ml">
-            </datalist>
+            <select id="unit-input" style="width: 100px; padding: 10px; font-size: 1rem; border: 2px solid #E8E8E8; border-radius: 10px; text-align: center;" onchange="toggleCustomUnit('modal')">
+                <option value="個">個</option>
+                <option value="本">本</option>
+                <option value="袋">袋</option>
+                <option value="パック">パック</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="L">L</option>
+                <option value="ml">ml</option>
+                <option value="__custom__">その他...</option>
+            </select>
+            <input type="text" id="unit-input-custom" placeholder="単位入力" style="width: 100px; padding: 10px; font-size: 1rem; border: 2px solid #E8E8E8; border-radius: 10px; text-align: center; display: none;" autocomplete="off" />
         </div>
         <button onclick="updateQuantity()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #1ABC9C, #2ECC71); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-bottom: 8px;">保存</button>
         <div class="cat-cancel" onclick="closeQuantityModal()">キャンセル</div>
