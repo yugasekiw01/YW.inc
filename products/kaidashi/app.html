@@ -348,6 +348,27 @@
             background: rgba(26,188,156,0.2);
             color: #1ABC9C;
         }
+        .quantity-controls {
+            display: flex; align-items: center; gap: 4px;
+            flex-shrink: 0;
+        }
+        .qty-btn {
+            background: linear-gradient(135deg, #F0FBF7, #E8F8F2);
+            border: 1.5px solid rgba(26,188,156,0.3);
+            color: #1ABC9C; font-weight: 700; font-size: 1rem;
+            width: 28px; height: 28px; border-radius: 8px;
+            cursor: pointer; transition: all 0.18s;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0; line-height: 1;
+        }
+        .qty-btn:hover {
+            background: linear-gradient(135deg, #C8F0E4, #B8EBD9);
+            border-color: rgba(26,188,156,0.5);
+            transform: scale(1.1);
+        }
+        .qty-btn:active {
+            transform: scale(0.95);
+        }
         .cat-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5);
             display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
@@ -909,24 +930,27 @@ function render() {
             const checkerHtml = item.checked && item.checked_by ? `<div class="checker">✓ ${esc(item.checked_by)}</div>` : '';
             const votersHtml = buildVotersHtml(voters);
             const showVoteButton = participants.length > 1;
-            // 数量・単位の表示（クリック可能）
-            let displayName = esc(item.name);
-            let quantityHtml = '';
-            if (item.quantity && item.unit) {
-                quantityHtml = `<span class="quantity-badge" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="クリックで編集">${item.quantity}${item.unit}</span>`;
-            } else if (item.quantity) {
-                quantityHtml = `<span class="quantity-badge" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="クリックで編集">${item.quantity}</span>`;
-            } else if (item.unit) {
-                quantityHtml = `<span class="quantity-badge" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="クリックで編集">${item.unit}</span>`;
-            } else {
-                quantityHtml = `<span class="quantity-badge add-quantity" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="クリックで個数を追加">+個数</span>`;
+            // 数量・単位の表示（プラスマイナスボタン付き）
+            const qty = item.quantity || 1;
+            const unit = item.unit || '個';
+            let detailText = 'クリックで編集';
+            if (item.added_by || item.quantity_modified_by) {
+                detailText += '\n---';
+                if (item.added_by) detailText += `\n追加: ${item.added_by}`;
+                if (item.quantity_modified_by) detailText += `\n個数変更: ${item.quantity_modified_by}`;
             }
-            displayName += ` ${quantityHtml}`;
+            let quantityControlsHtml = `
+                <div class="quantity-controls">
+                    <button class="qty-btn minus" onclick="event.stopPropagation(); decrementQuantity('${esc(item.id)}')" title="数量を減らす">−</button>
+                    <span class="quantity-badge" onclick="event.stopPropagation(); openQuantityModal('${esc(item.id)}')" title="${detailText}">${qty}${unit}</span>
+                    <button class="qty-btn plus" onclick="event.stopPropagation(); incrementQuantity('${esc(item.id)}')" title="数量を増やす">+</button>
+                </div>`;
             html += `<div class="item ${item.checked?'checked':''}" data-cat="${esc(item.category)}">
                 <div class="checkbox-wrap" onclick="toggleItemWithUndo('${esc(item.id)}',${item.checked},'${esc(item.name)}')">
                     <input type="checkbox" class="item-checkbox" ${item.checked?'checked':''} style="pointer-events:none;">
                 </div>
-                <div class="item-info"><div class="item-name">${displayName}</div>${checkerHtml}${votersHtml}</div>
+                <div class="item-info"><div class="item-name">${esc(item.name)}</div>${checkerHtml}${votersHtml}</div>
+                ${quantityControlsHtml}
                 ${showVoteButton ? `<button class="vote-btn ${voted?'voted':''}" onclick="voteItem('${esc(item.id)}')">✋ ホシイ！${voters.length?' '+voters.length:''}</button>` : ''}
                 <button class="cat-btn" onclick="openCatModal('${esc(item.id)}')">${CAT_ICONS[CATEGORIES.includes(item.category)?item.category:'その他']||'📦'}</button>
                 <button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>
@@ -1077,7 +1101,11 @@ async function updateQuantity() {
     if (!quantityChangeItemId) return;
     const quantity = parseInt(document.getElementById('quantity-input').value) || null;
     const unit = document.getElementById('unit-input').value || null;
-    const { error } = await sb.from('items').update({ quantity, unit }).eq('id', quantityChangeItemId).eq('event_id', eventId);
+    const { error } = await sb.from('items').update({
+        quantity,
+        unit,
+        quantity_modified_by: myName || null
+    }).eq('id', quantityChangeItemId).eq('event_id', eventId);
     if (error) {
         console.error('Update quantity error:', error);
         alert('更新に失敗しました');
@@ -1085,6 +1113,41 @@ async function updateQuantity() {
         closeQuantityModal();
         await load(); // 更新後にリストを再読み込み
     }
+}
+
+// ========== 個数増減 ==========
+async function incrementQuantity(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    const newQuantity = (item.quantity || 1) + 1;
+    const { error } = await sb.from('items').update({
+        quantity: newQuantity,
+        quantity_modified_by: myName || null
+    }).eq('id', id).eq('event_id', eventId);
+    if (error) {
+        console.error('Increment quantity error:', error);
+    }
+    // Realtimeで自動更新されるが、念のため手動でも更新
+    item.quantity = newQuantity;
+    item.quantity_modified_by = myName;
+    render();
+}
+
+async function decrementQuantity(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    const newQuantity = Math.max(1, (item.quantity || 1) - 1);
+    const { error } = await sb.from('items').update({
+        quantity: newQuantity,
+        quantity_modified_by: myName || null
+    }).eq('id', id).eq('event_id', eventId);
+    if (error) {
+        console.error('Decrement quantity error:', error);
+    }
+    // Realtimeで自動更新されるが、念のため手動でも更新
+    item.quantity = newQuantity;
+    item.quantity_modified_by = myName;
+    render();
 }
 
 // ========== タブ ==========
