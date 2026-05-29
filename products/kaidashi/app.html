@@ -395,6 +395,9 @@
         }
         .vote-btn:hover { background: #D5F5EC; border-color: #1ABC9C; }
         .vote-btn.voted { background: #1ABC9C; border-color: #1ABC9C; color: white; }
+        .item-content { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+        .item-top { display: flex; align-items: flex-start; gap: 12px; }
+        .item-bottom { display: flex; align-items: center; }
         .item-info { flex: 1; min-width: 0; }
 
         /* ---- 名前入力モーダル ---- */
@@ -947,10 +950,14 @@ function render() {
                 <div class="checkbox-wrap" onclick="toggleItemWithUndo('${esc(item.id)}',${item.checked},'${esc(item.name)}')">
                     <input type="checkbox" class="item-checkbox" ${item.checked?'checked':''} style="pointer-events:none;">
                 </div>
-                <div class="item-info"><div class="item-name">${esc(item.name)}</div>${checkerHtml}</div>
-                ${quantityControlsHtml}
-                <button class="cat-btn" onclick="openCatModal('${esc(item.id)}')">${CAT_ICONS[CATEGORIES.includes(item.category)?item.category:'その他']||'📦'}</button>
-                <button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>
+                <div class="item-content">
+                    <div class="item-top">
+                        <div class="item-info"><div class="item-name">${esc(item.name)}</div>${checkerHtml}</div>
+                        <button class="cat-btn" onclick="openCatModal('${esc(item.id)}')">${CAT_ICONS[CATEGORIES.includes(item.category)?item.category:'その他']||'📦'}</button>
+                        <button class="delete-btn" onclick="deleteItem('${esc(item.id)}')">✕</button>
+                    </div>
+                    <div class="item-bottom">${quantityControlsHtml}</div>
+                </div>
             </div>`;
         });
         html += '</div>';
