@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kaidashi-v4.0';
+const CACHE_NAME = 'kaidashi-v4.1';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -59,8 +59,8 @@ self.addEventListener('fetch', event => {
           return response;
         }
         return fetch(event.request).then(fetchResponse => {
-          // 正常なレスポンスのみキャッシュ
-          if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type !== 'basic') {
+          // リダイレクトやエラーレスポンスはキャッシュしない
+          if (!fetchResponse || !fetchResponse.ok || fetchResponse.type !== 'basic' || fetchResponse.redirected) {
             return fetchResponse;
           }
           const responseToCache = fetchResponse.clone();
