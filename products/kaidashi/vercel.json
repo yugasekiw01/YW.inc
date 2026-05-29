@@ -2,8 +2,11 @@
   "version": 2,
   "name": "kaidashi",
   "public": true,
-  "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/app.html", "destination": "/app.html" },
+    { "source": "/app", "destination": "/app.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
